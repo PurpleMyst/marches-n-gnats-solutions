@@ -8,10 +8,8 @@ LETTERS = set(ascii_lowercase) | set("äöõü") | set("-")
 def main() -> None:
     p = Program()
 
-    p("MARK", "_", f"FIND", "_", "R")
-
     for letter in LETTERS:
-        p("INIT", letter, f"MARK", letter, "L")
+        p("INIT", letter, f"APPEND_{letter}", "*", "R")
 
         p("FIND", letter, f"APPEND_{letter}", "*", "R")
 
