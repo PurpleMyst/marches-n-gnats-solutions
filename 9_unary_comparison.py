@@ -2,6 +2,7 @@ from utils import Program
 
 MAX_N = 256
 
+
 def main() -> None:
     with Program() as p:
         p("INIT", "|", "LHS_1", "|", "R")

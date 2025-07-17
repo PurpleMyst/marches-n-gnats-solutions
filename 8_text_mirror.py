@@ -43,6 +43,5 @@ def main() -> None:
             p("RETURN", "*", "TAKE", "_", "R")
 
 
-
 if __name__ == "__main__":
     main()
