@@ -33,19 +33,25 @@ class Program:
         return self
 
     def __exit__(self, *_) -> None:
+        transitions = sorted(set(self._transitions))
+
         frequency = Counter()
-        for transition in self._transitions:
-            frequency[transition.from_state] += 1
-            frequency[transition.to_state] += 1
+        for transition in transitions:
+            if transition.from_state not in ("HALT", "INIT"):
+                frequency[transition.from_state] += 1
+            if transition.to_state not in ("HALT", "INIT"):
+                frequency[transition.to_state] += 1
         sorted_states = sorted(frequency, key=lambda w: frequency[w], reverse=True)
         state_names = {
-            state: self._encode(i) if state not in ("HALT", "INIT") and not self._debug else state
+            state: self._encode(i) if not self._debug else state
             for i, state in enumerate(sorted_states)
         }
-        print(Counter(frequency.values()))
+        for passthru_state in ("INIT", "HALT"):
+            assert passthru_state not in state_names
+            state_names[passthru_state] = passthru_state
 
         with open(self._filename, "w", newline="\n", encoding="utf-8") as f:
-            for transition in self._transitions:
+            for transition in transitions:
                 from_state = state_names[transition.from_state]
                 to_state = state_names[transition.to_state]
                 symbol = transition.symbol
@@ -59,8 +65,11 @@ class Program:
         """Writes a rule to the file in the format:
         from_state current_symbol to_state new_symbol direction
         """
-        self._transitions.append(
-            Transition(
-                from_state=from_, symbol=symbol, to_state=to, new_symbol=new_symbol, direction=dir
-            )
+        transition = Transition(
+            from_state=from_, symbol=symbol, to_state=to, new_symbol=new_symbol, direction=dir
         )
+        self._transitions.append(transition)
+
+    def ignore(self, state: str, symbol: str, dir: Literal["L", "R"]) -> None:
+        """Writes a rule that ignores the current symbol and stays in the same state."""
+        self(state, symbol, state, symbol, dir)

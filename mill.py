@@ -293,11 +293,13 @@ class LogicMill:
 def main() -> None:
     from pathlib import Path
 
-    transition_rules = parse_transition_rules(Path("rules.txt").read_text(encoding="utf-8"))
-    mill = LogicMill(transition_rules)
-    result, steps = mill.run(Path("input.txt").read_text(encoding="utf-8").strip(), verbose=True)
-    print(f"Result: {result}")
-    print(f"Steps: {steps}")
+    for line in Path("input.txt").read_text(encoding="utf-8").splitlines():
+        transition_rules = parse_transition_rules(Path("rules.txt").read_text(encoding="utf-8"))
+        mill = LogicMill(transition_rules)
+        result, steps = mill.run(line.strip(), verbose=True)
+        print(f"Tape: {line!r}")
+        print(f"Result: {result}")
+        print(f"Steps: {steps}")
 
 
 if __name__ == "__main__":
