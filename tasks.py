@@ -8,14 +8,16 @@
 #     "argdantic",
 # ]
 # ///
-from argh import dispatch_commands
-import requests
-from bs4 import BeautifulSoup
-from glob import glob
-from pathlib import Path
-import sys
 import os
 import subprocess
+import sys
+from glob import glob
+from pathlib import Path
+
+import requests
+from argh import dispatch_commands
+from bs4 import BeautifulSoup
+
 
 def run(quest: str, *args: str) -> None:
     if quest.isdigit():
@@ -36,7 +38,7 @@ def run(quest: str, *args: str) -> None:
     input_file = py_file.parent / "input.txt"
     if input_file.exists() and "-i" not in args:
         args = ["-i", input_file, *args]  # type: ignore
-    
+
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).parent)
     subprocess.run(
@@ -48,7 +50,6 @@ def run(quest: str, *args: str) -> None:
 
 def main():
     dispatch_commands([run])
-
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
-from utils import Program, LETTERS
+from utils import LETTERS, Program
+
 
 def main() -> None:
     with Program() as p:
@@ -20,8 +21,6 @@ def main() -> None:
 
         p.ignore("FINISH", "|", "R")
         p("FINISH", "_", "HALT", "|", "R")
-
-
 
 
 if __name__ == "__main__":

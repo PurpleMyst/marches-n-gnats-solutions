@@ -1,9 +1,9 @@
-from typing import Counter, Literal, NamedTuple, Self
-import pyperclip
-import sys
 import argparse
-
+import sys
 from string import ascii_lowercase
+from typing import Counter, Literal, NamedTuple, Self
+
+import pyperclip
 
 import mill
 
@@ -91,7 +91,6 @@ class Program:
             print(f"Input tape: {line.strip()}")
             print(f"Output tape: {result}")
             print(f"Steps taken: {steps}")
-
 
     def __call__(
         self, from_: str, symbol: str, to: str, new_symbol: str, dir: Literal["L", "R"]
