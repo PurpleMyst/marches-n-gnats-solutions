@@ -1,4 +1,13 @@
 from typing import Counter, Literal, NamedTuple, Self
+import pyperclip
+import sys
+import argparse
+
+from string import ascii_lowercase
+
+import mill
+
+LETTERS = set(ascii_lowercase) | set("äöõü") | set("-")
 
 
 class Transition(NamedTuple):
@@ -12,11 +21,8 @@ class Transition(NamedTuple):
 
 
 class Program:
-    def __init__(self, *, filename: str = "rules.txt", debug: bool = __debug__) -> None:
+    def __init__(self) -> None:
         self._transitions = []
-
-        self._filename = filename
-        self._debug = debug
 
     @staticmethod
     def _encode(n: int) -> str:
@@ -33,6 +39,24 @@ class Program:
         return self
 
     def __exit__(self, *_) -> None:
+        argparser = argparse.ArgumentParser(
+            description="Run a Turing machine with the given transition rules."
+        )
+        argparser.add_argument(
+            "-i",
+            "--input",
+            type=str,
+            default="-",
+            help="Input file containing the tape to process. Use '-' for stdin.",
+        )
+        argparser.add_argument(
+            "-c",
+            "--compress",
+            action="store_true",
+            help="Compress state names to short identifiers.",
+        )
+        args = argparser.parse_args()
+
         transitions = sorted(set(self._transitions))
 
         frequency = Counter()
@@ -43,21 +67,31 @@ class Program:
                 frequency[transition.to_state] += 1
         sorted_states = sorted(frequency, key=lambda w: frequency[w], reverse=True)
         state_names = {
-            state: self._encode(i) if not self._debug else state
+            state: self._encode(i) if args.compress else state
             for i, state in enumerate(sorted_states)
         }
         for passthru_state in ("INIT", "HALT"):
             assert passthru_state not in state_names
             state_names[passthru_state] = passthru_state
 
-        with open(self._filename, "w", newline="\n", encoding="utf-8") as f:
-            for transition in transitions:
-                from_state = state_names[transition.from_state]
-                to_state = state_names[transition.to_state]
-                symbol = transition.symbol
-                new_symbol = transition.new_symbol
-                direction = transition.direction
-                f.write(f"{from_state} {symbol} {to_state} {new_symbol} {direction}\n")
+        lines = []
+        for transition in transitions:
+            from_state = state_names[transition.from_state]
+            to_state = state_names[transition.to_state]
+            symbol = transition.symbol
+            new_symbol = transition.new_symbol
+            direction = transition.direction
+            lines.append(f"{from_state} {symbol} {to_state} {new_symbol} {direction}")
+
+        parsed_rules = mill.parse_transition_rules("\n".join(lines))
+
+        for line in sys.stdin if args.input == "-" else open(args.input):
+            logic_mill = mill.LogicMill(parsed_rules)
+            result, steps = logic_mill.run(line.strip(), verbose=True)
+            print(f"Input tape: {line.strip()}")
+            print(f"Output tape: {result}")
+            print(f"Steps taken: {steps}")
+
 
     def __call__(
         self, from_: str, symbol: str, to: str, new_symbol: str, dir: Literal["L", "R"]
