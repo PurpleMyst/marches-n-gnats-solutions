@@ -16,7 +16,13 @@ def main() -> None:
                 if letter == "c" and other_letter == "h":
                     p(f"APPEND_{letter}", other_letter, f"TAKE_ch", "*", "L")
                 else:
-                    p(f"APPEND_{letter}", other_letter, f"APPEND_{letter}", other_letter, "R")
+                    p(
+                        f"APPEND_{letter}",
+                        other_letter,
+                        f"APPEND_{letter}",
+                        other_letter,
+                        "R",
+                    )
 
             p(f"APPEND_{letter}", "_", f"DO_{letter}", "_", "R")
 

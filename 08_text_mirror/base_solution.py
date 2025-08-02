@@ -30,7 +30,13 @@ def main() -> None:
 
                 for nonspace in LETTERS:
                     p(f"TOOK_{s}", nonspace, f"DROPPING_{s}", nonspace, "L")
-                    p(f"FINISH_{letter}", nonspace, f"FINISH_DROPPING_{letter}", nonspace, "L")
+                    p(
+                        f"FINISH_{letter}",
+                        nonspace,
+                        f"FINISH_DROPPING_{letter}",
+                        nonspace,
+                        "L",
+                    )
                     p.ignore(f"DROPPING_{s}", nonspace, "L")
                     p.ignore(f"FINISH_DROPPING_{letter}", nonspace, "L")
 

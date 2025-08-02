@@ -30,7 +30,11 @@ def main() -> None:
             for m in range(1, MAX_N + 1):
                 for s in range(1, MAX_N + 1):
                     if n - 1 > 0 and m - 2 > 0:
-                        p(*f"M_{n - 1}_{s}_{m - 1} _ M_{n - 1}_{s}_{m - 2} | R".split(" "))
+                        p(
+                            *f"M_{n - 1}_{s}_{m - 1} _ M_{n - 1}_{s}_{m - 2} | R".split(
+                                " "
+                            )
+                        )
                     elif n - 2 > 0:
                         p(*f"M_{n - 1}_{s}_{m - 1} _ M_{n - 2}_{s}_{s} | R".split(" "))
                     else:

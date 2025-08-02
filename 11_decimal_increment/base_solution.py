@@ -1,4 +1,5 @@
 from string import digits
+
 from utils import Program
 
 
@@ -15,6 +16,7 @@ def main() -> None:
                 p("INCREMENT", number, "INCREMENT", "0", "L")
 
         p("INCREMENT", "_", "HALT", "1", "L")
+
 
 if __name__ == "__main__":
     main()

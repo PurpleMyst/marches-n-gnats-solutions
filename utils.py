@@ -101,7 +101,11 @@ class Program:
         from_state current_symbol to_state new_symbol direction
         """
         transition = Transition(
-            from_state=from_, symbol=symbol, to_state=to, new_symbol=new_symbol, direction=dir
+            from_state=from_,
+            symbol=symbol,
+            to_state=to,
+            new_symbol=new_symbol,
+            direction=dir,
         )
         self._transitions.append(transition)
 
