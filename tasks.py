@@ -6,17 +6,22 @@
 #     "requests",
 #     "pyperclip",
 #     "argdantic",
+#     "prompt-toolkit",
 # ]
 # ///
 import os
+import re
 import subprocess
 import sys
+import webbrowser
 from glob import glob
 from pathlib import Path
 
+import prompt_toolkit
 import requests
-from argh import dispatch_commands
+from argh import aliases, dispatch_commands
 from bs4 import BeautifulSoup
+from prompt_toolkit.completion import FuzzyWordCompleter
 
 
 def run(quest: str, *args: str) -> None:
@@ -44,12 +49,60 @@ def run(quest: str, *args: str) -> None:
     subprocess.run(
         [sys.executable, str(py_file)] + list(args),
         env=env,
-        check=True,
     )
 
 
+def is_solved(quest: str) -> bool:
+    return bool(glob("*" + format(int(re.search(r"/quest/(\d+)", quest).group(1)), "02") + "*"))
+
+
+@aliases("ss")
+def start_solve() -> None:
+    os.chdir(Path(__file__).parent)
+    base_url = "https://mng.quest"
+    resp = requests.get(base_url)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    quests = [base_url + a["href"] for a in soup.find_all("a", href=re.compile(r"^/quest/\d+"))]
+    unsolved_quests = [q for q in quests if not is_solved(q)]
+    if not unsolved_quests:
+        print("All quests are solved!")
+        return
+    print("Unsolved quests:")
+    for quest in unsolved_quests:
+        quest_id = re.search(r"/quest/(\d+)", quest).group(1)
+        print(f"  {quest_id}: {quest}")
+    quest_id = prompt_toolkit.prompt(
+        "Enter quest ID to solve: ", completer=(FuzzyWordCompleter(unsolved_quests))
+    )
+
+    quest_num, quest_name = re.search(r"/quest/(\d+)/([^/]+)", quest_id).groups()
+    quest_dir = Path(__file__).parent / f"{int(quest_num):02}_{quest_name.replace('-', '_')}"
+    if not quest_dir.exists():
+        print(f"Quest directory {quest_dir} does not exist. Creating it.")
+        quest_dir.mkdir(parents=True, exist_ok=True)
+    (quest_dir / "base_solution.py").write_text(
+        "\n".join(
+            [
+                "from utils import Program",
+                "",
+                "",
+                "def main() -> None:",
+                "    with Program() as p:",
+                "        # Write your solution here",
+                "        pass",
+                "",
+                'if __name__ == "__main__":',
+                "    main()",
+            ]
+        )
+    )
+    print(f"Created quest directory {quest_dir}.")
+    webbrowser.open_new(f"https://mng.quest/quest/{quest_num}/{quest_name}")
+
+
 def main():
-    dispatch_commands([run])
+    dispatch_commands([run, start_solve])
 
 
 if __name__ == "__main__":

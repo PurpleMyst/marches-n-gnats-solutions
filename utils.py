@@ -83,7 +83,9 @@ class Program:
             direction = transition.direction
             lines.append(f"{from_state} {symbol} {to_state} {new_symbol} {direction}")
 
-        parsed_rules = mill.parse_transition_rules("\n".join(lines))
+        rules = "\n".join(lines)
+        parsed_rules = mill.parse_transition_rules(rules)
+        pyperclip.copy(rules)
 
         for line in sys.stdin if args.input == "-" else open(args.input):
             logic_mill = mill.LogicMill(parsed_rules)
