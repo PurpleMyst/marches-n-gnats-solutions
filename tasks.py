@@ -26,7 +26,7 @@ from bs4 import BeautifulSoup
 
 def run(quest: str, *args: str) -> None:
     if quest.isdigit():
-        [quest_path] = Path(__file__).parent.glob(f"{quest}*")
+        [quest_path] = Path(__file__).parent.glob(f"*{quest}*")
         quest = quest_path.name
 
     quest_dir = Path(__file__).parent / quest
@@ -37,7 +37,11 @@ def run(quest: str, *args: str) -> None:
         case []:
             raise FileNotFoundError(f"No Python file found in {quest_dir}")
         case _:
-            raise ValueError(f"Multiple Python files found in {quest_dir}")
+            [py_file] = pyfzf.FzfPrompt().prompt(
+                [str(p.resolve()) for p in py_files],
+                "--reverse --multi --height=30%",
+                prompt="Select a Python file to run: ",
+            )
     print(f"Running quest {quest} with python file {py_file.name}")
 
     input_file = py_file.parent / "input.txt"
