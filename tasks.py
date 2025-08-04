@@ -6,8 +6,10 @@
 #     "bs4",
 #     "prompt-toolkit",
 #     "pyfzf",
+#     "pyhtml2md",
 #     "pyperclip",
 #     "requests",
+#     "unidecode",
 # ]
 # ///
 import os
@@ -17,6 +19,8 @@ import sys
 import webbrowser
 from glob import glob
 from pathlib import Path
+import pyhtml2md
+import unidecode
 
 import pyfzf
 import requests
@@ -24,6 +28,7 @@ from argh import aliases, dispatch_commands
 from bs4 import BeautifulSoup
 
 
+@aliases("r")
 def run(quest: str, *args: str) -> None:
     if quest.isdigit():
         [quest_path] = Path(__file__).parent.glob(f"*{quest}*")
@@ -39,8 +44,7 @@ def run(quest: str, *args: str) -> None:
         case _:
             [py_file] = pyfzf.FzfPrompt().prompt(
                 [str(p.resolve()) for p in py_files],
-                "--reverse --multi --height=30%",
-                prompt="Select a Python file to run: ",
+                "--reverse --height=30%",
             )
     print(f"Running quest {quest} with python file {py_file.name}")
 
@@ -84,11 +88,21 @@ def start_solve() -> None:
     if not quest_dir.exists():
         print(f"Quest directory {quest_dir} does not exist. Creating it.")
         quest_dir.mkdir(parents=True, exist_ok=True)
+
+    quest_url = f"https://mng.quest/quest/{quest_num}/{quest_name}"
+    quest_resp = requests.get(quest_url)
+    quest_resp.raise_for_status()
+    quest_soup = BeautifulSoup(quest_resp.text, "html.parser")
+    task = quest_soup.find(id="task")
+    task_lines = pyhtml2md.convert(str(task)).splitlines()
+    task_lines = ["# " + unidecode.unidecode(line.strip(), errors="preserve") for line in task_lines if line.strip()]
+
     (quest_dir / "base_solution.py").write_text(
         "\n".join(
             [
                 "from utils import Program",
                 "",
+                *task_lines,
                 "",
                 "def main() -> None:",
                 "    with Program() as p:",
@@ -98,10 +112,11 @@ def start_solve() -> None:
                 'if __name__ == "__main__":',
                 "    main()",
             ]
-        )
+        ),
+        encoding="utf-8",
     )
     print(f"Created quest directory {quest_dir}.")
-    webbrowser.open_new(f"https://mng.quest/quest/{quest_num}/{quest_name}")
+    webbrowser.open_new(quest_url)
 
 
 def main():
