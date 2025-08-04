@@ -99,9 +99,7 @@ class LogicMill:
                 msg,
             )
 
-        current_state, current_symbol, new_state, new_symbol, move_direction = (
-            transition
-        )
+        current_state, current_symbol, new_state, new_symbol, move_direction = transition
 
         if move_direction not in [LEFT, RIGHT]:
             msg = f"Invalid moveDirection: {move_direction}. Must be L or R"
@@ -110,9 +108,7 @@ class LogicMill:
             )
 
         if len(current_symbol) != 1:
-            msg = (
-                f"Invalid current symbol {current_symbol}. Must be a single character."
-            )
+            msg = f"Invalid current symbol {current_symbol}. Must be a single character."
             raise InvalidSymbolError(
                 msg,
             )
@@ -134,9 +130,13 @@ class LogicMill:
         transitions = {}
         has_halt_state = False
         for transition in transitions_list:
-            current_state, current_symbol, new_state, new_symbol, move_direction = (
-                self._validate_transition(transition)
-            )
+            (
+                current_state,
+                current_symbol,
+                new_state,
+                new_symbol,
+                move_direction,
+            ) = self._validate_transition(transition)
 
             if current_state not in transitions:
                 transitions[current_state] = {}
@@ -184,9 +184,7 @@ class LogicMill:
             )
 
         self.tape = {
-            i: symbol
-            for i, symbol in enumerate(input_tape)
-            if symbol != self.blank_symbol
+            i: symbol for i, symbol in enumerate(input_tape) if symbol != self.blank_symbol
         }
         self.head_position = 0
         self.current_state = self.initial_state
@@ -300,9 +298,7 @@ def main() -> None:
     from pathlib import Path
 
     for line in Path("input.txt").read_text(encoding="utf-8").splitlines():
-        transition_rules = parse_transition_rules(
-            Path("rules.txt").read_text(encoding="utf-8")
-        )
+        transition_rules = parse_transition_rules(Path("rules.txt").read_text(encoding="utf-8"))
         mill = LogicMill(transition_rules)
         result, steps = mill.run(line.strip(), verbose=True)
         print(f"Tape: {line!r}")

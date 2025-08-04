@@ -53,9 +53,7 @@ def run(quest: str, *args: str) -> None:
 
 
 def is_solved(quest: str) -> bool:
-    return bool(
-        glob("*" + format(int(re.search(r"/quest/(\d+)", quest).group(1)), "02") + "*")
-    )
+    return bool(glob("*" + format(int(re.search(r"/quest/(\d+)", quest).group(1)), "02") + "*"))
 
 
 @aliases("ss")
@@ -65,10 +63,7 @@ def start_solve() -> None:
     resp = requests.get(base_url)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    quests = [
-        base_url + a["href"]
-        for a in soup.find_all("a", href=re.compile(r"^/quest/\d+"))
-    ]
+    quests = [base_url + a["href"] for a in soup.find_all("a", href=re.compile(r"^/quest/\d+"))]
     unsolved_quests = [q for q in quests if not is_solved(q)]
     if not unsolved_quests:
         print("All quests are solved!")
@@ -81,9 +76,7 @@ def start_solve() -> None:
     [quest_id] = fzf.prompt(unsolved_quests, "--reverse --multi --height=30%")
 
     quest_num, quest_name = re.search(r"/quest/(\d+)/([^/]+)", quest_id).groups()
-    quest_dir = (
-        Path(__file__).parent / f"{int(quest_num):02}_{quest_name.replace('-', '_')}"
-    )
+    quest_dir = Path(__file__).parent / f"{int(quest_num):02}_{quest_name.replace('-', '_')}"
     if not quest_dir.exists():
         print(f"Quest directory {quest_dir} does not exist. Creating it.")
         quest_dir.mkdir(parents=True, exist_ok=True)

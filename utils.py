@@ -1,5 +1,6 @@
 import argparse
 import sys
+from contextlib import suppress
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 
@@ -87,12 +88,14 @@ class Program:
         parsed_rules = mill.parse_transition_rules(rules)
         pyperclip.copy(rules)
 
-        for line in sys.stdin if args.input == "-" else open(args.input):
-            logic_mill = mill.LogicMill(parsed_rules)
-            result, steps = logic_mill.run(line.strip(), verbose=True)
-            print(f"Input tape: {line.strip()}")
-            print(f"Output tape: {result}")
-            print(f"Steps taken: {steps}")
+        with suppress(KeyboardInterrupt):
+            for line in sys.stdin if args.input == "-" else open(args.input):
+                logic_mill = mill.LogicMill(parsed_rules)
+                result, steps = logic_mill.run(line.strip(), verbose=True)
+                print(f"Input tape: {line.strip()}")
+                print(f"Output tape: {result}")
+                print(f"Steps taken: {steps}")
+                print(f"Rule count: {len(parsed_rules)}")
 
     def __call__(
         self, from_: str, symbol: str, to: str, new_symbol: str, dir: Literal["L", "R"]
