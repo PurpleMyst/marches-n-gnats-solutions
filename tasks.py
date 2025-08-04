@@ -1,12 +1,13 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
+#     "argdantic",
 #     "argh",
 #     "bs4",
-#     "requests",
-#     "pyperclip",
-#     "argdantic",
 #     "prompt-toolkit",
+#     "pyfzf",
+#     "pyperclip",
+#     "requests",
 # ]
 # ///
 import os
@@ -17,11 +18,10 @@ import webbrowser
 from glob import glob
 from pathlib import Path
 
-import prompt_toolkit
+import pyfzf
 import requests
 from argh import aliases, dispatch_commands
 from bs4 import BeautifulSoup
-from prompt_toolkit.completion import FuzzyWordCompleter
 
 
 def run(quest: str, *args: str) -> None:
@@ -77,9 +77,8 @@ def start_solve() -> None:
     for quest in unsolved_quests:
         quest_id = re.search(r"/quest/(\d+)", quest).group(1)
         print(f"  {quest_id}: {quest}")
-    quest_id = prompt_toolkit.prompt(
-        "Enter quest ID to solve: ", completer=(FuzzyWordCompleter(unsolved_quests))
-    )
+    fzf = pyfzf.FzfPrompt()
+    [quest_id] = fzf.prompt(unsolved_quests, "--reverse --multi --height=30%")
 
     quest_num, quest_name = re.search(r"/quest/(\d+)/([^/]+)", quest_id).groups()
     quest_dir = (
