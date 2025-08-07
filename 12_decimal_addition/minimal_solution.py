@@ -2,6 +2,8 @@ from string import digits
 
 from utils import Program
 
+# Shorter solution by just doing two very simple operations: decrement the rhs, increment the lhs,
+# stop when the rhs is 0.
 
 def main() -> None:
     with Program() as p:
@@ -25,7 +27,6 @@ def main() -> None:
                 p("INC", digit, "INC", "0", "L")
             p("INC", "_", "INIT", "1", "R")
 
-            # debug
             p("DEC", "+", "FINISH", "_", "R")
             p("FINISH", "9", "FINISH", "_", "R")
             p("FINISH", "_", "HALT", "_", "R")
