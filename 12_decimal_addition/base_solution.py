@@ -1,4 +1,5 @@
-from string import digits, ascii_lowercase
+from string import ascii_lowercase, digits
+
 from utils import Program
 
 # On the input tape, you'll get two non-negative decimal numbers separated by
@@ -13,6 +14,7 @@ from utils import Program
 PROCESSED_DIGITS = ascii_lowercase
 MAX_SUM = 9 + 9
 
+
 def main() -> None:
     with Program() as p:
         for digit in digits:
@@ -26,11 +28,17 @@ def main() -> None:
 
             for other_digit in digits:
                 p.ignore(f"GOT_DIGIT_{digit}", other_digit, "L")
-                p(f"ADD_DIGIT_{digit}", other_digit, "INIT", PROCESSED_DIGITS[int(digit) + int(other_digit)], "R")
+                p(
+                    f"ADD_DIGIT_{digit}",
+                    other_digit,
+                    "INIT",
+                    PROCESSED_DIGITS[int(digit) + int(other_digit)],
+                    "R",
+                )
 
             p(f"ADD_DIGIT_{digit}", "_", "INIT", PROCESSED_DIGITS[int(digit)], "R")
 
-            for i, other_digit in enumerate(PROCESSED_DIGITS[:MAX_SUM + 1]):
+            for i, other_digit in enumerate(PROCESSED_DIGITS[: MAX_SUM + 1]):
                 p.ignore("INIT", other_digit, "R")
                 p.ignore(f"ADD_DIGIT_{digit}", other_digit, "L")
 
@@ -54,6 +62,7 @@ def main() -> None:
 
         p("CARRY", "_", "HALT", "1", "L")
         p("CONVERT_BACK", "_", "HALT", "_", "L")
+
 
 if __name__ == "__main__":
     main()

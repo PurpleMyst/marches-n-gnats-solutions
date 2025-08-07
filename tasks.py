@@ -19,11 +19,11 @@ import sys
 import webbrowser
 from glob import glob
 from pathlib import Path
-import pyhtml2md
-import unidecode
 
 import pyfzf
+import pyhtml2md
 import requests
+import unidecode
 from argh import aliases, dispatch_commands
 from bs4 import BeautifulSoup
 
@@ -95,7 +95,11 @@ def start_solve() -> None:
     quest_soup = BeautifulSoup(quest_resp.text, "html.parser")
     task = quest_soup.find(id="task")
     task_lines = pyhtml2md.convert(str(task)).splitlines()
-    task_lines = ["# " + unidecode.unidecode(line.strip(), errors="preserve") for line in task_lines if line.strip()]
+    task_lines = [
+        "# " + unidecode.unidecode(line.strip(), errors="preserve")
+        for line in task_lines
+        if line.strip()
+    ]
 
     (quest_dir / "base_solution.py").write_text(
         "\n".join(

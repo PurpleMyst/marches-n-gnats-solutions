@@ -8,6 +8,7 @@ ALPHABET = "SML"
 
 class State(NamedTuple):
     """State of the program."""
+
     s: int  # Count of 'S'
     m: int  # Count of 'M'
     l: int  # Count of 'L'
@@ -20,11 +21,11 @@ class State(NamedTuple):
     def add(self, char: str) -> Self:
         """Increment the state based on the character."""
         match char:
-            case 'S':
+            case "S":
                 return type(self)(self.s + 1, self.m, self.l)
-            case 'M':
+            case "M":
                 return type(self)(self.s, self.m + 1, self.l)
-            case 'L':
+            case "L":
                 return type(self)(self.s, self.m, self.l + 1)
             case _:
                 raise ValueError(f"Invalid character: {char}")
@@ -32,18 +33,18 @@ class State(NamedTuple):
     def sub(self, char: str) -> Self:
         """Decrement the state based on the character."""
         match char:
-            case 'S':
+            case "S":
                 return type(self)(self.s - 1, self.m, self.l)
-            case 'M':
+            case "M":
                 return type(self)(self.s, self.m - 1, self.l)
-            case 'L':
+            case "L":
                 return type(self)(self.s, self.m, self.l - 1)
             case _:
                 raise ValueError(f"Invalid character: {char}")
 
-
     def __str__(self) -> str:
         return f"{self.s}_{self.m}_{self.l}"
+
 
 def main() -> None:
     with Program() as p:
@@ -67,8 +68,6 @@ def main() -> None:
                 p(f"DROP_{state}", "_", f"DROP_{state.sub('L')}", "L", "R")
             else:
                 p(f"DROP_{state}", "_", "HALT", "_", "R")
-
-
 
 
 if __name__ == "__main__":

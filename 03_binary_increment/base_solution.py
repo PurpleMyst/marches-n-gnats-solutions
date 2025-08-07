@@ -4,6 +4,7 @@ from utils import Program
 # For example, if the input tape is `1010`, your output tape should be `1011`.
 # The output tape shouldn't contain leading zeros (e.g., `001` should be `1`).
 
+
 def main() -> None:
     with Program() as p:
         for c in "01":
@@ -13,6 +14,7 @@ def main() -> None:
         p("CARRY", "0", "HALT", "1", "L")
         p("CARRY", "1", "CARRY", "0", "L")
         p("CARRY", "_", "HALT", "1", "L")
+
 
 if __name__ == "__main__":
     main()

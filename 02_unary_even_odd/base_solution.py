@@ -8,5 +8,6 @@ def main() -> None:
         p("INIT", "_", "HALT", "E", "R")
         p("ODD", "_", "HALT", "O", "R")
 
+
 if __name__ == "__main__":
     main()
