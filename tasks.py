@@ -29,7 +29,7 @@ from bs4 import BeautifulSoup
 
 
 @aliases("r")
-def run(quest: str, *args: str) -> None:
+def run(quest: str, pattern: str = "") -> None:
     if quest.isdigit():
         [quest_path] = Path(__file__).parent.glob(f"*{quest}*")
         quest = quest_path.name
@@ -43,14 +43,17 @@ def run(quest: str, *args: str) -> None:
             raise FileNotFoundError(f"No Python file found in {quest_dir}")
         case _:
             [py_file] = pyfzf.FzfPrompt().prompt(
-                [str(p.resolve()) for p in py_files],
-                "--reverse --height=30%",
+                [p.resolve().name for p in py_files],
+                "--reverse --height=30%" + f" --filter={pattern}" if pattern else "",
             )
+            py_file = Path(quest_dir, py_file).resolve()
     print(f"Running quest {quest} with python file {py_file.name}")
 
     input_file = py_file.parent / "input.txt"
-    if input_file.exists() and "-i" not in args:
-        args = ["-i", input_file, *args]  # type: ignore
+    if input_file.exists():
+        args = ["-i", input_file]  # type: ignore
+    else:
+        args = []
 
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).parent)

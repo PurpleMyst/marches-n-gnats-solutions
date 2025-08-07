@@ -6,6 +6,7 @@ This module provides a simple implementation of a Turing machine.
 LICENSE: MIT
 """
 
+from math import exp
 from time import sleep
 
 RIGHT = "R"
@@ -287,8 +288,8 @@ class LogicMill:
 
             if verbose:
                 self._print_tape()
-
-            sleep(1 / 10)
+                # Sleep to allow for visualizing the steps, but speed up as the steps increase
+                sleep(1 / 10 * exp(-steps_count / 100))
 
         msg = f"Max steps reached: {max_steps}"
         raise RuntimeError(msg)
