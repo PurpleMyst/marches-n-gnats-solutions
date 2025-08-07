@@ -88,14 +88,19 @@ class Program:
         parsed_rules = mill.parse_transition_rules(rules)
         pyperclip.copy(rules)
 
+        output = []
         with suppress(KeyboardInterrupt):
             for line in sys.stdin if args.input == "-" else open(args.input):
                 logic_mill = mill.LogicMill(parsed_rules)
                 result, steps = logic_mill.run(line.strip(), verbose=True)
-                print(f"Input tape: {line.strip()}")
-                print(f"Output tape: {result}")
-                print(f"Steps taken: {steps}")
-                print(f"Rule count: {len(parsed_rules)}")
+                output.append((line, result, steps, len(parsed_rules)))
+
+        for line, result, steps, len_parsed_rules in output:
+            print(f"Input tape: {line.strip()}")
+            print(f"Output tape: {result}")
+            print(f"Steps taken: {steps}")
+            print(f"Rule count: {len_parsed_rules}")
+            print()
 
     def __call__(
         self, from_: str, symbol: str, to: str, new_symbol: str, dir: Literal["L", "R"]

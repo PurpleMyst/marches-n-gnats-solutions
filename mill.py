@@ -218,7 +218,7 @@ class LogicMill:
 
         print(self._render_tape(strip_blank=False))
         print(" " * head_pos_in_window + "^")
-        print(self.current_state, f"|: {self._render_tape().count('|')}")
+        print("\x1b[1m" + self.current_state + "\x1b[0m")
         print()
 
     def _step(self) -> bool:
