@@ -1,4 +1,5 @@
 from string import ascii_lowercase, digits
+from itertools import product
 
 from utils import Program
 
@@ -10,54 +11,65 @@ from utils import Program
 
 PROCESSED_DIGITS = ascii_lowercase
 MAX_SUM = 9 + 9
+MAX_N = 3
+ALLOWED_FINAL_DIGITS = "27"  # Determined via experimentation on what got the fewest steps.
 
 
 def main() -> None:
     with Program() as p:
+        for n in range(1, MAX_N + 1):
+            for seq in map("".join, product(digits, repeat=n)):
+                if n == MAX_N and seq[-1] not in ALLOWED_FINAL_DIGITS:
+                    continue
+
+                p(f"READ_RHS_{seq}", "+", f"ADD_{seq}", "+", "L")
+
+                for digit in digits:
+                    p.ignore(f"SKIP_{seq}", digit, "L")
+                    if n == MAX_N or (n == MAX_N - 1 and digit not in ALLOWED_FINAL_DIGITS):
+                        p(f"READ_RHS_{seq}", digit, f"SKIP_{seq}", digit, "L")
+                    else:
+                        p(f"READ_RHS_{seq}", digit, f"READ_RHS_{seq + digit}", "_", "L")
+
+                p(f"READ_RHS_{seq}", "+", f"ADD_{seq}", "+", "L")
+                p(f"SKIP_{seq}", "+", f"ADD_{seq}", "+", "L")
+
+                for digit in digits:
+                    if n == 1:
+                        p(
+                            f"ADD_{seq}",
+                            digit,
+                            "INIT",
+                            PROCESSED_DIGITS[int(digit) + int(seq)],
+                            "R",
+                        )
+                    else:
+                        p(
+                            f"ADD_{seq}",
+                            digit,
+                            f"ADD_{seq[1:]}",
+                            PROCESSED_DIGITS[int(digit) + int(seq[0])],
+                            "L",
+                        )
+
+                if n == 1:
+                    p(f"ADD_{seq}", "_", "INIT", PROCESSED_DIGITS[int(seq)], "R")
+                else:
+                    p(f"ADD_{seq}", "_", f"ADD_{seq[1:]}", PROCESSED_DIGITS[int(seq[0])], "L")
+
+                for processed_digit in PROCESSED_DIGITS[: MAX_SUM + 1]:
+                    p.ignore(f"ADD_{seq}", processed_digit, "L")
+
         for digit in digits:
             p.ignore("INIT", digit, "R")
             p.ignore("INIT", "+", "R")
             p("INIT", "_", "POP_DIGIT", "_", "L")
-            p("POP_DIGIT", digit, f"GOT_DIGIT_{digit}", "_", "L")
-
-            for other_digit in digits:
-                p(f"GOT_DIGIT_{digit}", other_digit, f"GOT_DIGITS_{digit}_{other_digit}", "_", "L")
+            p("POP_DIGIT", digit, f"READ_RHS_{digit}", "_", "L")
 
             p("POP_DIGIT", "+", "CONVERT_BACK", "_", "L")
 
-            p(f"GOT_DIGIT_{digit}", "+", f"ADD_DIGIT_{digit}", "+", "L")
-            for other_digit in digits:
-                p(f"GOT_DIGITS_{digit}_{other_digit}", "+", f"ADD_DIGITS_{digit}_{other_digit}", "+", "L")
-
-            for other_digit in digits:
-                for third_digit in digits:
-                    p.ignore(f"GOT_DIGITS_{digit}_{other_digit}", third_digit, "L")
-
-                p(
-                    f"ADD_DIGIT_{digit}",
-                    other_digit,
-                    "INIT",
-                    PROCESSED_DIGITS[int(digit) + int(other_digit)],
-                    "R",
-                )
-                for third_digit in digits:
-                    p(
-                        f"ADD_DIGITS_{digit}_{other_digit}",
-                        third_digit,
-                        f"ADD_DIGIT_{other_digit}",
-                        PROCESSED_DIGITS[int(digit) + int(third_digit)],
-                        "L",
-                    )
-
-            p(f"ADD_DIGIT_{digit}", "_", "INIT", PROCESSED_DIGITS[int(digit)], "R")
-            for other_digit in digits:
-                p(f"ADD_DIGITS_{digit}_{other_digit}", "_", f"ADD_DIGIT_{other_digit}", PROCESSED_DIGITS[int(digit)], "L")
-
             for i, other_digit in enumerate(PROCESSED_DIGITS[: MAX_SUM + 1]):
                 p.ignore("INIT", other_digit, "R")
-                p.ignore(f"ADD_DIGIT_{digit}", other_digit, "L")
-                for third_digit in digits:
-                    p.ignore(f"ADD_DIGITS_{digit}_{third_digit}", other_digit, "L")
 
                 if i < 10:
                     p("CONVERT_BACK", other_digit, "CONVERT_BACK", str(i), "L")
