@@ -1,5 +1,5 @@
-from string import ascii_lowercase, digits
 from itertools import product
+from string import ascii_lowercase, digits
 
 from utils import Program
 

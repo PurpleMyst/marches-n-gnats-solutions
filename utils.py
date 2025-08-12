@@ -1,10 +1,10 @@
 import argparse
 import sys
+import unicodedata
 from contextlib import suppress
+from functools import lru_cache
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
-import unicodedata
-from functools import lru_cache
 
 import pyperclip
 
@@ -24,6 +24,7 @@ class Transition(NamedTuple):
     to_state: str
     new_symbol: str
     direction: Literal["L", "R"]
+
 
 @lru_cache(maxsize=1)
 def _build_safe_charset(use_full_plane: bool = False) -> str:
@@ -143,16 +144,30 @@ class Program:
 
                 logic_mill = mill.LogicMill(parsed_rules)
                 result, steps = logic_mill.run(line.strip(), verbose=True)
-                output.append((line, result, steps, len(logic_mill._parse_transitions_list(parsed_rules, "INIT", "HALT")), expected_output))
+                output.append(
+                    (
+                        line,
+                        result,
+                        steps,
+                        len(logic_mill._parse_transitions_list(parsed_rules, "INIT", "HALT")),
+                        expected_output,
+                    )
+                )
 
         for line, result, steps, state_count, expected_output in output:
             print(f"\x1b[1mInput tape\x1b[0m: {line.strip()}")
             print(f"\x1b[1mOutput tape\x1b[0m: {result.strip()}")
             print(f"\x1b[1mSteps taken\x1b[0m: {steps}")
             print(f"\x1b[1mRule count\x1b[0m: {len(parsed_rules)}")
-            print(f"\x1b[1mRule size\x1b[0m: {GREEN if len(rules) <= 170000 else RED}{len(rules)}\x1b[0m")
-            print(f"\x1b[1mState count\x1b[0m: {GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED}{state_count}\x1b[0m")
-            print(f"\x1b[1mExpected output\x1b[0m: {GREEN if expected_output.strip() == result.strip() else RED}{expected_output.strip() if expected_output else 'N/A'}\x1b[0m")
+            print(
+                f"\x1b[1mRule size\x1b[0m: {GREEN if len(rules) <= 170000 else RED}{len(rules)}\x1b[0m"
+            )
+            print(
+                f"\x1b[1mState count\x1b[0m: {GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED}{state_count}\x1b[0m"
+            )
+            print(
+                f"\x1b[1mExpected output\x1b[0m: {GREEN if expected_output.strip() == result.strip() else RED}{expected_output.strip() if expected_output else 'N/A'}\x1b[0m"
+            )
             print()
 
     def __call__(

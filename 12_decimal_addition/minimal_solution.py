@@ -5,6 +5,7 @@ from utils import Program
 # Shorter solution by just doing two very simple operations: decrement the rhs, increment the lhs,
 # stop when the rhs is 0.
 
+
 def main() -> None:
     with Program() as p:
         for digit in digits:
