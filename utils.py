@@ -3,6 +3,8 @@ import sys
 from contextlib import suppress
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
+import unicodedata
+from functools import lru_cache
 
 import pyperclip
 
@@ -20,6 +22,39 @@ class Transition(NamedTuple):
     new_symbol: str
     direction: Literal["L", "R"]
 
+@lru_cache(maxsize=1)
+def _build_safe_charset(use_full_plane: bool = False) -> str:
+    """
+    Build a deterministic, safe charset for encoding state IDs.
+    Excludes:
+      - Control characters, separators, combining marks (categories C, Z, M)
+      - Characters that are whitespace (.isspace())
+      - The slash '/' because '//' is a comment prefix
+    Iterates from U+0021 (33) up to U+FFFF by default (BMP), or up to U+10FFFF if
+    use_full_plane is True.
+
+    This function is cached (so the scan happens once).
+    """
+    max_cp = 0x110000 if use_full_plane else 0x10000
+    chars = []
+    for cp in range(33, max_cp):
+        ch = chr(cp)
+        if ch == "/":
+            continue
+        if ch.isspace():
+            continue
+        cat = unicodedata.category(ch)
+        # skip Control/Other (C*), Separator (Z*), and Mark (M*) categories
+        if cat[0] in ("C", "Z", "M"):
+            continue
+        chars.append(ch)
+
+    # Fallback to original printable-ascii-without-slash if something went wrong
+    if not chars:
+        return "".join(chr(i) for i in range(33, 127) if chr(i) != "/")
+
+    return "".join(chars)
+
 
 class Program:
     def __init__(self) -> None:
@@ -27,14 +62,21 @@ class Program:
 
     @staticmethod
     def _encode(n: int) -> str:
-        """Encodes a number into a string using a custom base-94 encoding."""
-        chars = "".join(chr(i) for i in range(33, 127) if chr(i) != "/")
+        if n < 0:
+            raise ValueError("n must be >= 0")
+
+        chars = _build_safe_charset(use_full_plane=True)
         base = len(chars)
+        assert base > 1, "Charset must have at least 2 characters"
+
+        if n == 0:
+            return chars[0]
+
         s = ""
         while n:
             s = chars[n % base] + s
             n //= base
-        return s or chars[0]
+        return s
 
     def __enter__(self) -> Self:
         return self
