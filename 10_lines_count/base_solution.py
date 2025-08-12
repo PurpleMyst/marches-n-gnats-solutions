@@ -1,26 +1,27 @@
 from utils import LETTERS, Program
 
 
+LETTERS &= set('-abdefghijklmnoprstuwyäõöü')
+
+
 def main() -> None:
     with Program() as p:
         for letter in LETTERS:
-            p("INIT", letter, "RIGHT", "_", "R")
-            p("RIGHT", letter, "RIGHT", "_", "R")
+            p("INIT", letter, "INIT", "*", "R")
+        p.ignore("INIT", "+", "R")
 
-        for letter in LETTERS | {"+"}:
-            p.ignore("INC", letter, "R")
-            p.ignore("RETURN", letter, "L")
+        p("INIT", "_", "COUNT", "|", "L")
+        
+        p.ignore("COUNT", "*", "L")
+        p.ignore("COUNT", "|", "L")
+        p("COUNT", "+", "INCREMENT", "*", "R")
+        p.ignore("INCREMENT", "*", "R")
 
-        p("RIGHT", "+", "INC", "_", "R")
-        p.ignore("INC", "|", "R")
-        p.ignore("RETURN", "|", "L")
-        p("INC", "_", "RETURN", "|", "L")
-        p("RETURN", "_", "RIGHT", "_", "R")
-        p("RIGHT", "|", "FINISH", "|", "R")
-        p("RIGHT", "_", "HALT", "|", "R")
-
-        p.ignore("FINISH", "|", "R")
-        p("FINISH", "_", "HALT", "|", "R")
+        p.ignore("INCREMENT", "|", "R")
+        p("INCREMENT", "_", "COUNT", "|", "L")
+        p("COUNT", "_", "CLEAN", "_", "R")
+        p("CLEAN", "*", "CLEAN", "_", "R")
+        p("CLEAN", "|", "HALT", "|", "R")
 
 
 if __name__ == "__main__":
