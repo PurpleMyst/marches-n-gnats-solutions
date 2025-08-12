@@ -166,7 +166,7 @@ class Program:
                 f"\x1b[1mState count\x1b[0m: {GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED}{state_count}\x1b[0m"
             )
             print(
-                f"\x1b[1mExpected output\x1b[0m: {GREEN if expected_output.strip() == result.strip() else RED}{expected_output.strip() if expected_output else 'N/A'}\x1b[0m"
+                f"\x1b[1mExpected output\x1b[0m: {GREEN if expected_output and expected_output.strip() == result.strip() else RED}{expected_output.strip() if expected_output else 'N/A'}\x1b[0m"
             )
             print()
 
