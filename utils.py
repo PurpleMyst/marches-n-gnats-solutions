@@ -16,6 +16,13 @@ RED = "\x1b[5;31m"
 YELLOW = "\x1b[5;33m"
 
 
+class _Same:
+    __slots__ = ()
+
+
+SAME = _Same()
+
+
 class Transition(NamedTuple):
     """Represents a transition in a Turing machine."""
 
@@ -177,19 +184,35 @@ class Program:
             print()
 
     def __call__(
-        self, from_: str, symbol: str, to: str, new_symbol: str, dir: Literal["L", "R"]
+        self,
+        from_state: str,
+        symbol: str | set[str],
+        to_state: str,
+        new_symbol: str | _Same,
+        dir: Literal["L", "R"],
     ) -> None:
         """Writes a rule to the file in the format:
         from_state current_symbol to_state new_symbol direction
         """
-        transition = Transition(
-            from_state=from_,
-            symbol=symbol,
-            to_state=to,
-            new_symbol=new_symbol,
-            direction=dir,
-        )
-        self._transitions.append(transition)
+        if isinstance(symbol, set):
+            for sym in symbol:
+                transition = Transition(
+                    from_state=from_state,
+                    symbol=sym,
+                    to_state=to_state,
+                    new_symbol=sym if isinstance(new_symbol, _Same) else new_symbol,
+                    direction=dir,
+                )
+                self._transitions.append(transition)
+        else:
+            transition = Transition(
+                from_state=from_state,
+                symbol=symbol,
+                to_state=to_state,
+                new_symbol=symbol if isinstance(new_symbol, _Same) else new_symbol,
+                direction=dir,
+            )
+            self._transitions.append(transition)
 
     def ignore(self, state: str, symbol: str | set[str], dir: Literal["L", "R"]) -> None:
         """Writes a rule that ignores the current symbol and stays in the same state."""
@@ -202,19 +225,31 @@ class Program:
     def find(
         self,
         from_state: str,
-        needle: str,
+        needle: str | set[str],
         ignoring: str | set[str],
         search_dir: Literal["L", "R"],
         to_state: str,
-        to_symbol: str,
+        to_symbol: str | _Same,
         to_dir: Literal["L", "R"] | None = None,
     ) -> None:
-        """Writes a rule that finds the next symbol in the tape."""
+        """Write a set of rules which will search for a symbol in the tape, ignoring
+        certain symbols, and then transition to a new state with a new symbol and direction."""
         self.ignore(from_state, ignoring, search_dir)
-        self(
-            from_state,
-            needle,
-            to_state,
-            to_symbol,
-            to_dir if to_dir is not None else ("R" if search_dir == "L" else "R"),
-        )
+
+        if isinstance(needle, set):
+            for n in needle:
+                self(
+                    from_state,
+                    n,
+                    to_state,
+                    to_symbol,
+                    to_dir if to_dir is not None else ("R" if search_dir == "L" else "R"),
+                )
+        else:
+            self(
+                from_state,
+                needle,
+                to_state,
+                to_symbol,
+                to_dir if to_dir is not None else ("R" if search_dir == "L" else "R"),
+            )

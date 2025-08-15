@@ -1,4 +1,4 @@
-from utils import Program
+from utils import SAME, Program
 
 # On the input tape, you'll get one or more positive numbers in the unary format separated by
 # commas. Your task is to sort these numbers in ascending order. For example, if the input tape is
@@ -14,7 +14,7 @@ def main() -> None:
         # Mark the end of the "to be sorted" part of the tape with "H".
         p("INIT", "|", "MARK_END", "|", "R")
         p.find("MARK_END", "_", {"|", ","}, "R", "RETURN", "H", "L")
-        p.find("RETURN", "_", {"|", ","}, "L", "DOIT", "_", "R")
+        p.find("RETURN", "_", {"|", ","}, "L", "NEXT", "_", "R")
 
         # The "GOBACK" state is responsible for marking the new "to be sorted" part of the tape, by
         # finding the previous comma and marking the end of the tape with "H".
@@ -26,14 +26,14 @@ def main() -> None:
         p.find("CLEAN", "_", {"|", ","}, "R", "LAST", "_", "L")
         p("LAST", ",", "HALT", "_", "R")
 
-        # The "DOIT" state loads the left-hand side of the tape into state LHS_n, then compares it
+        # The "NEXT" state loads the left-hand side of the tape into state LHS_n, then compares it
         # to the following item; if the left-hand side is greater, it swaps the two items by moving
         # to the "SWAP" state, otherwise the "SKIP" state moves on to the next pair of items.
         for n in range(1, MAX_ITEM):
             p(f"LHS_{n}", "H", f"GOBACK", ",", "L")
 
             # Load left-hand side into state, going to state CMP_n once fully loaded
-            p("DOIT" if n == 1 else f"LHS_{n - 1}", "|", f"LHS_{n}", "|", "R")
+            p("NEXT" if n == 1 else f"LHS_{n - 1}", "|", f"LHS_{n}", "|", "R")
             p(f"LHS_{n}", ",", f"CMP_{n}", ",", "R")
 
             # For each unit in the right-hand side, decrement our state; if we get to the comma
@@ -43,12 +43,11 @@ def main() -> None:
             p(f"CMP_{n}", "H", "SWAP", "H", "L")
 
         # State "CMP_0" means LHS <= RHS, so we can either skip or move on to the next iteration.
-        p("CMP_0", ",", "SKIP", ",", "L")
-        p("CMP_0", "|", "SKIP", "|", "L")
+        p("CMP_0", {",", "|"}, "SKIP", SAME, "L")
         p("CMP_0", "H", "GOBACK", ",", "L")
 
         # State "SKIP" means RHS >= LHS, so we just need to go back to the RHS and continue.
-        p.find("SKIP", ",", "|", "L", "DOIT", ",", "R")
+        p.find("SKIP", ",", "|", "L", "NEXT", ",", "R")
 
         # "SWAP" state
         # ||||||,|||,
@@ -69,15 +68,11 @@ def main() -> None:
         # 4) BACK_TO_RHS => Go back to RHS
         p.find("POP_MARK", "*", "|", "R", "BACK_TO_RHS_COMMA", "|", "L")
         p.find("BACK_TO_RHS_COMMA", ",", "|", "L", "BACK_TO_LHS_COMMA", ",", "L")
-        p.find("BACK_TO_LHS_COMMA", ",", {"!", "|"}, "L", "PLACE_BANG", ",", "R")
-        p.find("BACK_TO_LHS_COMMA", "_", {"!", "|"}, "L", "PLACE_BANG", "_", "R")
-        p("PLACE_BANG", "|", "BACK_TO_RHS", "!", "R")
-        p.ignore("PLACE_BANG", "!", "R")
-        p.ignore("BACK_TO_RHS", "|", "R")
-        p("BACK_TO_RHS", ",", "POP_MARK", ",", "R")
+        p.find("BACK_TO_LHS_COMMA", {",", "_"}, {"!", "|"}, "L", "PLACE_BANG", SAME, "R")
+        p.find("PLACE_BANG", "|", "!", "R", "BACK_TO_RHS", "!", "R")
+        p.find("BACK_TO_RHS", ",", "|", "R", "POP_MARK", ",", "R")
 
-        p("POP_MARK", ",", "DONE_MARKING", ",", "L")
-        p("POP_MARK", "H", "DONE_MARKING", "H", "L")
+        p("POP_MARK", {",", "H"}, "DONE_MARKING", SAME, "L")
 
         # "DONE_MARKING" state
         # !!!|||,|||,
@@ -99,9 +94,8 @@ def main() -> None:
         # !!!,||||||,
         #   ^  We are here at this point
         p("REMOVE_BANGS", "!", "REMOVE_BANGS", "|", "L")
-        p("REMOVE_BANGS", ",", "CONTINUE", ",", "R")
-        p("REMOVE_BANGS", "_", "CONTINUE", "_", "R")
-        p.find("CONTINUE", ",", "|", "R", "DOIT", ",", "R")
+        p("REMOVE_BANGS", {",", "_"}, "CONTINUE", SAME, "R")
+        p.find("CONTINUE", ",", "|", "R", "NEXT", ",", "R")
 
 
 if __name__ == "__main__":
