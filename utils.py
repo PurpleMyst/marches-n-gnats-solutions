@@ -102,6 +102,12 @@ class Program:
             action="store_true",
             help="Compress state names to short identifiers.",
         )
+        argparser.add_argument(
+            "-q",
+            "--quiet",
+            action="store_true",
+            help="Avoid verbose output, only print results.",
+        )
         args = argparser.parse_args()
 
         transitions = sorted(set(self._transitions))
@@ -143,7 +149,7 @@ class Program:
                     expected_output = None
 
                 logic_mill = mill.LogicMill(parsed_rules)
-                result, steps = logic_mill.run(line.strip(), verbose=True)
+                result, steps = logic_mill.run(line.strip(), verbose=not args.quiet)
                 output.append(
                     (
                         line,
@@ -185,6 +191,30 @@ class Program:
         )
         self._transitions.append(transition)
 
-    def ignore(self, state: str, symbol: str, dir: Literal["L", "R"]) -> None:
+    def ignore(self, state: str, symbol: str | set[str], dir: Literal["L", "R"]) -> None:
         """Writes a rule that ignores the current symbol and stays in the same state."""
-        self(state, symbol, state, symbol, dir)
+        if isinstance(symbol, set):
+            for symbol in symbol:
+                self(state, symbol, state, symbol, dir)
+        else:
+            self(state, symbol, state, symbol, dir)
+
+    def find(
+        self,
+        from_state: str,
+        needle: str,
+        ignoring: str | set[str],
+        search_dir: Literal["L", "R"],
+        to_state: str,
+        to_symbol: str,
+        to_dir: Literal["L", "R"] | None = None,
+    ) -> None:
+        """Writes a rule that finds the next symbol in the tape."""
+        self.ignore(from_state, ignoring, search_dir)
+        self(
+            from_state,
+            needle,
+            to_state,
+            to_symbol,
+            to_dir if to_dir is not None else ("R" if search_dir == "L" else "R"),
+        )

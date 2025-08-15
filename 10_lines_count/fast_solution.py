@@ -1,8 +1,7 @@
 from utils import LETTERS, Program
 
-
 MAX_N = 800
-LETTERS &= set('-Nabdefghijklmnoprstuwyäõöü')
+LETTERS &= set("-Nabdefghijklmnoprstuwyäõöü")
 
 
 def main() -> None:
@@ -17,6 +16,6 @@ def main() -> None:
                 p(f"COUNT_{n}", l, f"COUNT_{n}", "_", "R")
             p(f"COUNT_{n}", "+", f"COUNT_{n + 1}", "_", "R")
 
-            p(f"COUNT_{n}", "_", f"COUNT_{n-1}", "|", "R")
+            p(f"COUNT_{n}", "_", f"COUNT_{n - 1}", "|", "R")
 
         p(f"COUNT_0", "_", "HALT", "|", "R")

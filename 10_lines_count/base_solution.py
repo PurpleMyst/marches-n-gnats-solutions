@@ -1,7 +1,6 @@
 from utils import LETTERS, Program
 
-
-LETTERS &= set('-abdefghijklmnoprstuwyäõöü')
+LETTERS &= set("-abdefghijklmnoprstuwyäõöü")
 
 
 def main() -> None:
@@ -11,7 +10,7 @@ def main() -> None:
         p.ignore("INIT", "+", "R")
 
         p("INIT", "_", "COUNT", "|", "L")
-        
+
         p.ignore("COUNT", "*", "L")
         p.ignore("COUNT", "|", "L")
         p("COUNT", "+", "INCREMENT", "*", "R")

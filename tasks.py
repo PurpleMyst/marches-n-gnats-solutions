@@ -29,7 +29,7 @@ from bs4 import BeautifulSoup
 
 
 @aliases("r")
-def run(quest: str, pattern: str = "", compress: bool = False) -> None:
+def run(quest: str, pattern: str = "", compress: bool = False, quiet: bool = False) -> None:
     if quest.isdigit():
         [quest_path] = Path(__file__).parent.glob(f"*{quest}*")
         quest = quest_path.name
@@ -56,13 +56,18 @@ def run(quest: str, pattern: str = "", compress: bool = False) -> None:
         args = []
     if compress:
         args.append("-c")
+    if quiet:
+        args.append("-q")
 
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).parent)
-    subprocess.run(
-        [sys.executable, str(py_file)] + list(args),
-        env=env,
-    )
+    try:
+        subprocess.run(
+            [sys.executable, str(py_file)] + list(args),
+            env=env,
+        )
+    except KeyboardInterrupt:
+        print("Execution interrupted by user.")
 
 
 def is_solved(quest: str) -> bool:
