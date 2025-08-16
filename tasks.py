@@ -10,6 +10,7 @@
 #     "pyperclip",
 #     "requests",
 #     "unidecode",
+#     "pretty_errors",
 # ]
 # ///
 import os
@@ -24,6 +25,7 @@ import pyfzf
 import pyhtml2md
 import requests
 import unidecode
+import pretty_errors as _
 from argh import aliases, dispatch_commands
 from bs4 import BeautifulSoup
 

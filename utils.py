@@ -7,6 +7,7 @@ from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 
 import pyperclip
+import pretty_errors as _
 
 import mill
 
@@ -173,7 +174,7 @@ class Program:
             print(f"\x1b[1mSteps taken\x1b[0m: {steps}")
             print(f"\x1b[1mRule count\x1b[0m: {len(parsed_rules)}")
             print(
-                f"\x1b[1mRule size\x1b[0m: {GREEN if len(rules) <= 170000 else RED}{len(rules)}\x1b[0m"
+                f"\x1b[1mRule size\x1b[0m: {GREEN if len(rules) <= 170000 else RED}{len(rules):_} ({len(rules) / 170000:.2%})\x1b[0m"
             )
             print(
                 f"\x1b[1mState count\x1b[0m: {GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED}{state_count}\x1b[0m"
