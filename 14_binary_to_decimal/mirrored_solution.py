@@ -28,9 +28,8 @@ def main() -> None:
         p.find("DOUBLE_CARRY", SOO, {*BITS, "_"}, "L", "DO_DOUBLE_CARRY", SOO, "L")
 
         for d in digits:
-            should_carry = int(d) * 2 + 1 >= 10
-            p("DO_DOUBLE", d, "DO_DOUBLE_CARRY" if should_carry else "DO_DOUBLE", str((int(d) * 2) % 10), "L")
-            p("DO_DOUBLE_CARRY", d, "DO_DOUBLE", str((int(d) * 2) % 10 + 1), "L")
+            p("DO_DOUBLE", d, "DO_DOUBLE_CARRY" if int(d) * 2 >= 10 else "DO_DOUBLE", str((int(d) * 2) % 10), "L")
+            p("DO_DOUBLE_CARRY", d, "DO_DOUBLE_CARRY" if int(d) * 2 + 1 >= 10 else "DO_DOUBLE", str((int(d) * 2) % 10 + 1), "L")
 
             p("DO_DOUBLE", "_", "TO_INPUT", "_", "R")
             p("DO_DOUBLE_CARRY", "_", "TO_INPUT", "1", "R")
