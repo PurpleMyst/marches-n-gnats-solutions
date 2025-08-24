@@ -21,11 +21,11 @@ import webbrowser
 from glob import glob
 from pathlib import Path
 
+import pretty_errors as _
 import pyfzf
 import pyhtml2md
 import requests
 import unidecode
-import pretty_errors as _
 from argh import aliases, dispatch_commands
 from bs4 import BeautifulSoup
 

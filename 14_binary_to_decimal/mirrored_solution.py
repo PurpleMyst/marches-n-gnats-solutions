@@ -1,5 +1,6 @@
-from utils import Program
 from string import digits
+
+from utils import Program
 
 # On the input tape, you'll get a non-negative binary number.Your task is to convert it to a decimal
 # number. For example, if the input tape is `1010`, your output tape should be `10`.
@@ -28,13 +29,23 @@ def main() -> None:
         p.find("DOUBLE_CARRY", SOO, {*BITS, "_"}, "L", "DO_DOUBLE_CARRY", SOO, "L")
 
         for d in digits:
-            p("DO_DOUBLE", d, "DO_DOUBLE_CARRY" if int(d) * 2 >= 10 else "DO_DOUBLE", str((int(d) * 2) % 10), "L")
-            p("DO_DOUBLE_CARRY", d, "DO_DOUBLE_CARRY" if int(d) * 2 + 1 >= 10 else "DO_DOUBLE", str((int(d) * 2) % 10 + 1), "L")
+            p(
+                "DO_DOUBLE",
+                d,
+                "DO_DOUBLE_CARRY" if int(d) * 2 >= 10 else "DO_DOUBLE",
+                str((int(d) * 2) % 10),
+                "L",
+            )
+            p(
+                "DO_DOUBLE_CARRY",
+                d,
+                "DO_DOUBLE_CARRY" if int(d) * 2 + 1 >= 10 else "DO_DOUBLE",
+                str((int(d) * 2) % 10 + 1),
+                "L",
+            )
 
             p("DO_DOUBLE", "_", "TO_INPUT", "_", "R")
             p("DO_DOUBLE_CARRY", "_", "TO_INPUT", "1", "R")
-
-
 
 
 if __name__ == "__main__":

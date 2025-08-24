@@ -1,11 +1,13 @@
-from utils import Program
 from string import digits
+
+from utils import Program
 
 # On the input tape, you'll get a non-negative binary number.Your task is to convert it to a decimal
 # number. For example, if the input tape is `1010`, your output tape should be `10`.
 
 BITS = set("01")
 OUT = "@"  # marker for the output section
+
 
 def main() -> None:
     with Program() as p:
@@ -39,8 +41,6 @@ def main() -> None:
         p("DO_SHIFT_AND_CARRY_NEXT", "_", "DO_SHIFT_AND_CARRY", "_", "L")
         p("DO_SHIFT_AND_CARRY", OUT, "PLACE_ONE", OUT, "R")
         p("PLACE_ONE", "_", "NEXT_BIT", "1", "L")
-
-
 
 
 if __name__ == "__main__":

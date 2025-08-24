@@ -6,8 +6,8 @@ from functools import lru_cache
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 
-import pyperclip
 import pretty_errors as _
+import pyperclip
 
 import mill
 
