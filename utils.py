@@ -6,8 +6,10 @@ from functools import lru_cache
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 
+import numpy as np
 import pretty_errors as _
 import pyperclip
+from tqdm import tqdm
 
 import mill
 
@@ -35,7 +37,7 @@ class Transition(NamedTuple):
 
 
 @lru_cache(maxsize=1)
-def _build_safe_charset(use_full_plane: bool = False) -> str:
+def build_safe_charset(use_full_plane: bool = False) -> str:
     """
     Build a deterministic, safe charset for encoding state IDs.
     Excludes:
@@ -77,7 +79,7 @@ class Program:
         if n < 0:
             raise ValueError("n must be >= 0")
 
-        chars = _build_safe_charset(use_full_plane=True)
+        chars = build_safe_charset(use_full_plane=True)
         base = len(chars)
         assert base > 1, "Charset must have at least 2 characters"
 
@@ -150,7 +152,11 @@ class Program:
 
         output = []
         with suppress(KeyboardInterrupt):
-            for line in sys.stdin if args.input == "-" else open(args.input):
+            f = sys.stdin if args.input == "-" else open(args.input)
+            d = f.read()
+            x = []
+            y = []
+            for line in tqdm(d.splitlines(), desc="Processing", unit="line") if args.quiet else d.splitlines():
                 if " => " in line:
                     line, expected_output = line.split(" => ", 1)
                 else:
@@ -167,11 +173,13 @@ class Program:
                         expected_output,
                     )
                 )
+                x.append(len(result.strip()))
+                y.append(steps)
 
         for line, result, steps, state_count, expected_output in output:
-            print(f"\x1b[1mInput tape\x1b[0m: {line.strip()}")
-            print(f"\x1b[1mOutput tape\x1b[0m: {result.strip()}")
-            print(f"\x1b[1mSteps taken\x1b[0m: {steps}")
+            print(f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({line.strip().count("|")})' if set(line.strip()) == {'|'} else ''}")
+            print(f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({len(result.strip())})' if set(result.strip()) == {'|'} else ''}")
+            print(f"\x1b[1mSteps taken\x1b[0m: {steps:_}")
             print(f"\x1b[1mRule count\x1b[0m: {len(parsed_rules)}")
             print(
                 f"\x1b[1mRule size\x1b[0m: {GREEN if len(rules) <= 170000 else RED}{len(rules):_} ({len(rules) / 170000:.2%})\x1b[0m"
@@ -183,6 +191,26 @@ class Program:
                 f"\x1b[1mExpected output\x1b[0m: {GREEN if expected_output and expected_output.strip() == result.strip() else RED}{expected_output.strip() if expected_output else 'N/A'}\x1b[0m"
             )
             print()
+
+        x = np.array(x)
+        y = np.array(y)
+
+        best_deg = None
+        best_err = float("inf")
+        best_poly = None
+
+        for deg in range(1, 5):
+            coeffs = np.polyfit(x, y, deg)
+            p = np.poly1d(coeffs)
+            # err = mean_squared_error(y, p(x))
+            err = np.mean((y - p(x)) ** 2)
+            print(f"deg={deg}, mse={err:.4f}")
+            if err < best_err:
+                best_err = err
+                best_deg = deg
+                best_poly = p
+
+        print(best_poly)
 
     def __call__(
         self,

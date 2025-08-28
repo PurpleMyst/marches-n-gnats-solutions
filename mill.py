@@ -262,7 +262,7 @@ class LogicMill:
     def run(
         self,
         input_tape: str,
-        max_steps: int = 1_000_000,
+        max_steps: int = 20_000_000,
         *,
         verbose: bool = False,
     ) -> tuple[str, int]:

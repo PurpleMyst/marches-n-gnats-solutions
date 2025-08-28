@@ -11,6 +11,8 @@
 #     "requests",
 #     "unidecode",
 #     "pretty_errors",
+#     "tqdm",
+#     "numpy",
 # ]
 # ///
 import os

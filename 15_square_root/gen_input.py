@@ -1,6 +1,6 @@
 def main() -> None:
     with open("input.txt", "w") as f:
-        for n in range(1, 10):
+        for n in range(1, 20):
             print(f"{'|' * n**2} =>  {'|' * n}", file=f)
 
 
