@@ -156,7 +156,11 @@ class Program:
             d = f.read()
             x = []
             y = []
-            for line in tqdm(d.splitlines(), desc="Processing", unit="line") if args.quiet else d.splitlines():
+            for line in (
+                tqdm(d.splitlines(), desc="Processing", unit="line")
+                if args.quiet
+                else d.splitlines()
+            ):
                 if " => " in line:
                     line, expected_output = line.split(" => ", 1)
                 else:
@@ -177,8 +181,12 @@ class Program:
                 y.append(steps)
 
         for line, result, steps, state_count, expected_output in output:
-            print(f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({line.strip().count("|")})' if set(line.strip()) == {'|'} else ''}")
-            print(f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({len(result.strip())})' if set(result.strip()) == {'|'} else ''}")
+            print(
+                f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({line.strip().count("|")})' if set(line.strip()) == {'|'} else ''}"
+            )
+            print(
+                f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({len(result.strip())})' if set(result.strip()) == {'|'} else ''}"
+            )
             print(f"\x1b[1mSteps taken\x1b[0m: {steps:_}")
             print(f"\x1b[1mRule count\x1b[0m: {len(parsed_rules)}")
             print(

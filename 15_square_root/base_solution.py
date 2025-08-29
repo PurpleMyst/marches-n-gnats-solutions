@@ -6,6 +6,7 @@ from utils import SAME, Program
 # -------------------------------------------------------------------------------------------------
 # Solution based on subtracting successive odd numbers.
 
+
 def main() -> None:
     with Program() as p:
         # Mark the end of the input

@@ -1,4 +1,4 @@
-from utils import build_safe_charset, Program, SAME
+from utils import SAME, Program, build_safe_charset
 
 # On the input tape, you'll get a positive unary number that is also a perfect square. Your task is
 # to compute its square root.
@@ -7,6 +7,7 @@ from utils import build_safe_charset, Program, SAME
 # Solution based on subtracting successive odd numbers, but faster.
 
 MAX_N = 256
+
 
 def main() -> None:
     # Get a safe charset (i.e. printable UTF-8 characters) that'll be used in the program, this'll
@@ -38,7 +39,9 @@ def main() -> None:
         # The FINISH state removes the counter value from the tape and writes out half of it as the
         # final result (since the counter will have value 2sqrt(n) + 1 at the end).
         for n in range(2, MAX_N):
-            p.find("FINISH", cs[n], "_", "L", f"DROP_{n // 2 - 1}" if n // 2 != 1 else "HALT", "|", "L")
+            p.find(
+                "FINISH", cs[n], "_", "L", f"DROP_{n // 2 - 1}" if n // 2 != 1 else "HALT", "|", "L"
+            )
         for n in range(1, MAX_N):
             p(f"DROP_{n}", "_", f"DROP_{n - 1}" if n != 1 else "HALT", "|", "L")
 
