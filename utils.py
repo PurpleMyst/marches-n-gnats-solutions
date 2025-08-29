@@ -195,19 +195,16 @@ class Program:
         x = np.array(x)
         y = np.array(y)
 
-        best_deg = None
         best_err = float("inf")
         best_poly = None
 
-        for deg in range(1, 5):
+        for deg in range(1, 6):
             coeffs = np.polyfit(x, y, deg)
             p = np.poly1d(coeffs)
-            # err = mean_squared_error(y, p(x))
             err = np.mean((y - p(x)) ** 2)
             print(f"deg={deg}, mse={err:.4f}")
             if err < best_err:
                 best_err = err
-                best_deg = deg
                 best_poly = p
 
         print(best_poly)
