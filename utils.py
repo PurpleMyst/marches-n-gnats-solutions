@@ -1,12 +1,12 @@
 import argparse
+import re
 import sys
 import unicodedata
 from contextlib import suppress
 from functools import lru_cache
+from itertools import groupby
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
-from itertools import groupby
-import re
 
 import numpy as np
 import pretty_errors as _
@@ -203,7 +203,7 @@ class Program:
 
         for line, result, steps, state_count, expected_output in output:
             print(
-                    f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({n})' if (n := count_unary(line.strip())) is not None else ''}"
+                f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({n})' if (n := count_unary(line.strip())) is not None else ''}"
             )
             print(
                 f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({n})' if (n := count_unary(result.strip())) is not None else ''}"
@@ -215,11 +215,13 @@ class Program:
             print(
                 f"\x1b[1mRule size\x1b[0m: {rule_size_color}{len(rules):_} ({len(rules) / 170000:.2%})\x1b[0m"
             )
-            state_count_color = GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED
-            print(
-                f"\x1b[1mState count\x1b[0m: {state_count_color}{state_count}\x1b[0m"
+            state_count_color = (
+                GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED
             )
-            expected_output_color = GREEN if expected_output and expected_output.strip() == result.strip() else RED
+            print(f"\x1b[1mState count\x1b[0m: {state_count_color}{state_count}\x1b[0m")
+            expected_output_color = (
+                GREEN if expected_output and expected_output.strip() == result.strip() else RED
+            )
             print(
                 f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() or 'N/A'}\x1b[0m"
             )
@@ -250,9 +252,9 @@ class Program:
                 else:
                     dedup.setdefault((state, symbol), set()).add(None)
             for state, rules in sorted(dedup.items()):
-                print(f"  {state[0]} {state[1]}  " + str(sorted(rules) if None not in rules else "*"))
-
-
+                print(
+                    f"  {state[0]} {state[1]}  " + str(sorted(rules) if None not in rules else "*")
+                )
 
     def __call__(
         self,
