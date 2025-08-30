@@ -8,6 +8,7 @@ LICENSE: MIT
 
 from math import exp
 from time import sleep
+from typing import Counter, Iterable
 
 RIGHT = "R"
 LEFT = "L"
@@ -88,10 +89,12 @@ class LogicMill:
         self.halt_state = halt_state
         self.blank_symbol = blank_symbol
 
+        self.rule_frequency = Counter()
+
         self._set_tape("")
 
     def _validate_transition(self, transition: TransitionType) -> TransitionType:
-        if len(transition) != 5:  # noqa: PLR2004
+        if len(transition) != 5:
             msg = (
                 f"Invalid transition: {transition}. "
                 "Must be in the format (currentState, currentSymbol, newState, newSymbol, moveDirection)"
@@ -217,16 +220,12 @@ class LogicMill:
 
         head_pos_in_window = self.head_position - min_pos
 
-        print(self._render_tape(strip_blank=False))
+        print(self._render_tape(strip_blank=False), "\x1b[1m" + self.current_state + "\x1b[0m")
         print(" " * head_pos_in_window + "^")
-        print("\x1b[1m" + self.current_state + "\x1b[0m")
-        print()
 
-    def _step(self) -> bool:
+    def _step(self) -> None:
         """
         Perform a single step of the Logic Mill.
-
-        Returns a boolean indicating whether the step was successful.
         """
         current_symbol = self.tape.get(self.head_position, self.blank_symbol)
 
@@ -241,6 +240,7 @@ class LogicMill:
             raise MissingTransitionError(
                 msg,
             )
+        self.rule_frequency[(self.current_state, current_symbol)] += 1
 
         new_state, new_symbol, move_direction = transition
 
@@ -256,8 +256,6 @@ class LogicMill:
             self.head_position -= 1
         elif move_direction == RIGHT:
             self.head_position += 1
-
-        return True
 
     def run(
         self,
@@ -294,18 +292,10 @@ class LogicMill:
         msg = f"Max steps reached: {max_steps}"
         raise RuntimeError(msg)
 
+    def unused_rules(self) -> Iterable[tuple[str, str]]:
+        """Return a list of unused transition rules."""
 
-def main() -> None:
-    from pathlib import Path
-
-    for line in Path("input.txt").read_text(encoding="utf-8").splitlines():
-        transition_rules = parse_transition_rules(Path("rules.txt").read_text(encoding="utf-8"))
-        mill = LogicMill(transition_rules)
-        result, steps = mill.run(line.strip(), verbose=True)
-        print(f"Tape: {line!r}")
-        print(f"Result: {result}")
-        print(f"Steps: {steps}")
-
-
-if __name__ == "__main__":
-    main()
+        for state, symbols in self.transitions.items():
+            for symbol in symbols:
+                if (state, symbol) not in self.rule_frequency:
+                    yield (state, symbol)

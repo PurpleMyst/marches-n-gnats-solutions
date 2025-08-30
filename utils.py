@@ -5,6 +5,8 @@ from contextlib import suppress
 from functools import lru_cache
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
+from itertools import groupby
+import re
 
 import numpy as np
 import pretty_errors as _
@@ -24,6 +26,16 @@ class _Same:
 
 
 SAME = _Same()
+
+
+def is_unary(tape: str) -> bool:
+    """Check if the tape is a unary number (only contains '|')"""
+    return set(tape) == {"|"}
+
+
+def count_unary(tape: str) -> int | None:
+    """Count the number of '|' characters in a unary tape."""
+    return tape.count("|") if is_unary(tape) else None
 
 
 class Transition(NamedTuple):
@@ -151,11 +163,14 @@ class Program:
         pyperclip.copy(rules)
 
         output = []
+        x = []
+        y = []
+
+        unused_rules: set[tuple[str, str]] | None = None
+
         with suppress(KeyboardInterrupt):
             f = sys.stdin if args.input == "-" else open(args.input)
             d = f.read()
-            x = []
-            y = []
             for line in (
                 tqdm(d.splitlines(), desc="Processing", unit="line")
                 if args.quiet
@@ -180,23 +195,33 @@ class Program:
                 x.append(len(result.strip()))
                 y.append(steps)
 
+                new_unused = set(logic_mill.unused_rules())
+                if unused_rules is None:
+                    unused_rules = new_unused
+                else:
+                    unused_rules &= new_unused
+
         for line, result, steps, state_count, expected_output in output:
             print(
-                f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({line.strip().count("|")})' if set(line.strip()) == {'|'} else ''}"
+                    f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({n})' if (n := count_unary(line.strip())) is not None else ''}"
             )
             print(
-                f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({len(result.strip())})' if set(result.strip()) == {'|'} else ''}"
+                f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({n})' if (n := count_unary(result.strip())) is not None else ''}"
             )
             print(f"\x1b[1mSteps taken\x1b[0m: {steps:_}")
             print(f"\x1b[1mRule count\x1b[0m: {len(parsed_rules)}")
+
+            rule_size_color = GREEN if len(rules) <= 170_000 else RED
             print(
-                f"\x1b[1mRule size\x1b[0m: {GREEN if len(rules) <= 170000 else RED}{len(rules):_} ({len(rules) / 170000:.2%})\x1b[0m"
+                f"\x1b[1mRule size\x1b[0m: {rule_size_color}{len(rules):_} ({len(rules) / 170000:.2%})\x1b[0m"
             )
+            state_count_color = GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED
             print(
-                f"\x1b[1mState count\x1b[0m: {GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED}{state_count}\x1b[0m"
+                f"\x1b[1mState count\x1b[0m: {state_count_color}{state_count}\x1b[0m"
             )
+            expected_output_color = GREEN if expected_output and expected_output.strip() == result.strip() else RED
             print(
-                f"\x1b[1mExpected output\x1b[0m: {GREEN if expected_output and expected_output.strip() == result.strip() else RED}{expected_output.strip() if expected_output else 'N/A'}\x1b[0m"
+                f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() or 'N/A'}\x1b[0m"
             )
             print()
 
@@ -210,12 +235,24 @@ class Program:
             coeffs = np.polyfit(x, y, deg)
             p = np.poly1d(coeffs)
             err = np.mean((y - p(x)) ** 2)
-            print(f"deg={deg}, mse={err:.4f}")
             if err < best_err:
                 best_err = err
                 best_poly = p
 
         print(best_poly)
+
+        if unused_rules is not None:
+            print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(parsed_rules)}")
+            dedup = {}
+            for state, symbol in unused_rules:
+                if m := re.match(r"(\w+)_(\d+)$", state):
+                    dedup.setdefault((m.group(1), symbol), set()).add(int(m.group(2)))
+                else:
+                    dedup.setdefault((state, symbol), set()).add(None)
+            for state, rules in sorted(dedup.items()):
+                print(f"  {state[0]} {state[1]}  " + str(sorted(rules) if None not in rules else "*"))
+
+
 
     def __call__(
         self,
@@ -268,7 +305,9 @@ class Program:
     ) -> None:
         """Write a set of rules which will search for a symbol in the tape, ignoring
         certain symbols, and then transition to a new state with a new symbol and direction."""
-        self.ignore(from_state, ignoring, search_dir)
+
+        if ignoring:
+            self.ignore(from_state, ignoring, search_dir)
 
         if isinstance(needle, set):
             for n in needle:
