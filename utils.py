@@ -158,6 +158,8 @@ class Program:
             lines.append(f"{from_state} {symbol} {to_state} {new_symbol} {direction}")
 
         rules = "\n".join(lines)
+        with open("rules.txt", "w") as f:
+            f.write(rules)
         parsed_rules = mill.parse_transition_rules(rules)
         pyperclip.copy(rules)
 

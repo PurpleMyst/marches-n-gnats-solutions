@@ -1,20 +1,3 @@
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "argdantic",
-#     "argh",
-#     "bs4",
-#     "prompt-toolkit",
-#     "pyfzf",
-#     "pyhtml2md",
-#     "pyperclip",
-#     "requests",
-#     "unidecode",
-#     "pretty_errors",
-#     "tqdm",
-#     "numpy",
-# ]
-# ///
 import os
 import re
 import subprocess
