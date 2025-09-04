@@ -4,7 +4,6 @@ import sys
 import unicodedata
 from contextlib import suppress
 from functools import lru_cache
-from itertools import groupby
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 

@@ -94,8 +94,11 @@ def start_solve() -> None:
     for quest in unsolved_quests:
         quest_id = re.search(r"/quest/(\d+)", quest).group(1)
         print(f"  {quest_id}: {quest}")
-    fzf = pyfzf.FzfPrompt()
-    [quest_id] = fzf.prompt(unsolved_quests, "--reverse --multi --height=30%")
+    if len(unsolved_quests) == 1:
+        quest_id = unsolved_quests[0]
+    else:
+        fzf = pyfzf.FzfPrompt()
+        [quest_id] = fzf.prompt(unsolved_quests, "--reverse --multi --height=30%")
 
     quest_num, quest_name = re.search(r"/quest/(\d+)/([^/]+)", quest_id).groups()
     quest_dir = Path(__file__).parent / f"{int(quest_num):02}_{quest_name.replace('-', '_')}"
