@@ -16,7 +16,9 @@ from bs4 import BeautifulSoup
 
 
 @aliases("r")
-def run(quest: str, pattern: str = "", compress: bool = False, quiet: bool = False) -> None:
+def run(
+    quest: str, pattern: str = "", compress: bool = False, quiet: bool = False, jobs: bool = False
+) -> None:
     if quest.isdigit():
         [quest_path] = Path(__file__).parent.glob(f"*{quest}*")
         quest = quest_path.name
@@ -45,6 +47,8 @@ def run(quest: str, pattern: str = "", compress: bool = False, quiet: bool = Fal
         args.append("-c")
     if quiet:
         args.append("-q")
+    if jobs:
+        args.append("-j")
 
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).parent)

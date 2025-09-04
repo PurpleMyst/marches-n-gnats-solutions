@@ -2,12 +2,12 @@ import argparse
 import re
 import sys
 import unicodedata
+from concurrent.futures import ProcessPoolExecutor
 from contextlib import suppress
-from functools import lru_cache
+from functools import lru_cache, partial
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 
-import numpy as np
 import pretty_errors as _
 import pyperclip
 from tqdm import tqdm
@@ -81,6 +81,21 @@ def build_safe_charset(use_full_plane: bool = False) -> str:
     return "".join(chars)
 
 
+def _do_run(item: tuple[str, str | None], parsed_rules: list[mill.TransitionType], quiet: bool):
+    line, expected_output = item
+    logic_mill = mill.LogicMill(parsed_rules)
+    result, steps = logic_mill.run(line.strip(), verbose=not quiet)
+    return line, expected_output, logic_mill, result, steps
+
+
+def _do_split(line: str):
+    if " => " in line:
+        line, expected_output = line.split(" => ", 1)
+    else:
+        expected_output = None
+    return line, expected_output
+
+
 class Program:
     def __init__(self) -> None:
         self._transitions = []
@@ -129,6 +144,12 @@ class Program:
             action="store_true",
             help="Avoid verbose output, only print results.",
         )
+        argparser.add_argument(
+            "-j",
+            "--jobs",
+            action="store_true",
+            help="Use multiple processes to run the Turing machine on multiple inputs.",
+        )
         args = argparser.parse_args()
 
         transitions = sorted(set(self._transitions))
@@ -164,26 +185,24 @@ class Program:
         pyperclip.copy(rules)
 
         output = []
-        x = []
-        y = []
 
         unused_rules: set[tuple[str, str]] | None = None
 
-        with suppress(KeyboardInterrupt):
+        with suppress(KeyboardInterrupt), ProcessPoolExecutor() as executor:
             f = sys.stdin if args.input == "-" else open(args.input)
             d = f.read()
-            for line in (
-                tqdm(d.splitlines(), desc="Processing", unit="line")
+            do_run = partial(_do_run, parsed_rules=parsed_rules, quiet=args.quiet)
+            total = len(d.splitlines())
+            for line, expected_output, logic_mill, result, steps in (
+                tqdm(
+                    (executor.map if args.jobs else map)(do_run, map(_do_split, d.splitlines())),
+                    desc="Processing",
+                    unit="line",
+                    total=total,
+                )
                 if args.quiet
-                else d.splitlines()
+                else map(do_run, map(_do_split, d.splitlines()))
             ):
-                if " => " in line:
-                    line, expected_output = line.split(" => ", 1)
-                else:
-                    expected_output = None
-
-                logic_mill = mill.LogicMill(parsed_rules)
-                result, steps = logic_mill.run(line.strip(), verbose=not args.quiet)
                 output.append(
                     (
                         line,
@@ -193,8 +212,6 @@ class Program:
                         expected_output,
                     )
                 )
-                x.append(len(result.strip()))
-                y.append(steps)
 
                 new_unused = set(logic_mill.unused_rules())
                 if unused_rules is None:
@@ -227,22 +244,6 @@ class Program:
                 f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() or 'N/A'}\x1b[0m"
             )
             print()
-
-        x = np.array(x)
-        y = np.array(y)
-
-        best_err = float("inf")
-        best_poly = None
-
-        for deg in range(1, 6):
-            coeffs = np.polyfit(x, y, deg)
-            p = np.poly1d(coeffs)
-            err = np.mean((y - p(x)) ** 2)
-            if err < best_err:
-                best_err = err
-                best_poly = p
-
-        print(best_poly)
 
         if unused_rules is not None:
             print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(parsed_rules)}")
