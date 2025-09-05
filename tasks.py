@@ -24,7 +24,7 @@ def run(
         quest = quest_path.name
 
     quest_dir = Path(__file__).parent / quest
-    py_files = list(quest_dir.glob("*.py"))
+    py_files = [f for f in quest_dir.glob("*.py") if f.name != "gen_input.py"]
     match py_files:
         case [py_file]:
             py_file = py_file.resolve()

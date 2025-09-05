@@ -8,11 +8,10 @@ from functools import lru_cache, partial
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 
+import logic_mill_rs as mill
 import pretty_errors as _
 import pyperclip
 from tqdm import tqdm
-
-import mill
 
 LETTERS = set(ascii_lowercase) | set("äöõü") | set("-")
 GREEN = "\x1b[32m"
@@ -81,7 +80,7 @@ def build_safe_charset(use_full_plane: bool = False) -> str:
     return "".join(chars)
 
 
-def _do_run(item: tuple[str, str | None], parsed_rules: list[mill.TransitionType], quiet: bool):
+def _do_run(item: tuple[str, str | None], parsed_rules, quiet: bool):
     line, expected_output = item
     logic_mill = mill.LogicMill(parsed_rules)
     result, steps = logic_mill.run(line.strip(), verbose=not quiet)
@@ -179,7 +178,7 @@ class Program:
             lines.append(f"{from_state} {symbol} {to_state} {new_symbol} {direction}")
 
         rules = "\n".join(lines)
-        with open("rules.txt", "w") as f:
+        with open("rules.txt", "w", encoding="utf-8") as f:
             f.write(rules)
         parsed_rules = mill.parse_transition_rules(rules)
         pyperclip.copy(rules)
@@ -208,7 +207,7 @@ class Program:
                         line,
                         result,
                         steps,
-                        len(logic_mill._parse_transitions_list(parsed_rules, "INIT", "HALT")),
+                        count_states := logic_mill.state_count(),
                         expected_output,
                     )
                 )
