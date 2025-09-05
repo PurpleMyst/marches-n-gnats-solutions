@@ -5,6 +5,7 @@ import unicodedata
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import suppress
 from functools import lru_cache, partial
+from pathlib import Path
 from string import ascii_lowercase
 from typing import Counter, Literal, NamedTuple, Self
 
@@ -129,7 +130,11 @@ class Program:
 
     def __exit__(self, *_) -> None:
         argparser = argparse.ArgumentParser(
-            description="Run a Turing machine with the given transition rules."
+            description="Run a Turing machine with the given transition rules.",
+            add_help=False,
+        )
+        argparser.add_argument(
+            "-H", "--HELP", action="help", help="Show this help message and exit."
         )
         argparser.add_argument(
             "-i",
@@ -169,6 +174,9 @@ class Program:
         argparser.add_argument(
             "-U", "--no-used", action="store_true", help="Do not compute unused rules."
         )
+        argparser.add_argument(
+            "-f", "--failing", action="store_true", help="Only show failing cases."
+        )
         args = argparser.parse_args()
 
         transitions = sorted(
@@ -207,7 +215,10 @@ class Program:
             lines.append(f"{from_state} {symbol} {to_state} {new_symbol} {direction}")
 
         rules = "\n".join(lines)
-        with open("rules.txt", "w", encoding="utf-8") as f:
+        rules_path = (
+            Path("rules.txt") if args.input == "-" else Path(args.input).parent / "rules.txt"
+        )
+        with open(rules_path, "w", encoding="utf-8") as f:
             f.write(rules)
         pyperclip.copy(rules)
 
@@ -251,7 +262,16 @@ class Program:
                 else:
                     unused_rules &= new_unused
 
+        total_steps = 0
+        state_count = 0
+        had_failing = False
         for line, result, steps, state_count, expected_output in output:
+            total_steps += steps
+
+            if args.failing and expected_output and expected_output.strip() == result.strip():
+                continue
+            had_failing = True
+
             print(
                 f"\x1b[1mInput tape\x1b[0m: {line.strip()}{f' ({n})' if (n := count_unary(line.strip())) is not None else ''}"
             )
@@ -259,16 +279,6 @@ class Program:
                 f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({n})' if (n := count_unary(result.strip())) is not None else ''}"
             )
             print(f"\x1b[1mSteps taken\x1b[0m: {steps:_}")
-            print(f"\x1b[1mRule count\x1b[0m: {len(rules.splitlines())}")
-
-            rule_size_color = GREEN if len(rules) <= 170_000 else RED
-            print(
-                f"\x1b[1mRule size\x1b[0m: {rule_size_color}{len(rules):_} ({len(rules) / 170000:.2%})\x1b[0m"
-            )
-            state_count_color = (
-                GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED
-            )
-            print(f"\x1b[1mState count\x1b[0m: {state_count_color}{state_count}\x1b[0m")
             expected_output_color = (
                 GREEN if expected_output and expected_output.strip() == result.strip() else RED
             )
@@ -277,7 +287,25 @@ class Program:
             )
             print()
 
-        if unused_rules and not args.no_used:
+        if not had_failing and args.failing:
+            print(f"{GREEN}All {len(output)} cases passed! \x1b[0m")
+            print()
+
+        print(f"\x1b[1mRule count\x1b[0m: {len(rules.splitlines())}")
+
+        rule_size_color = GREEN if len(rules) <= 170_000 else RED
+        print(
+            f"\x1b[1mRule size\x1b[0m: {rule_size_color}{len(rules):_} ({len(rules) / 170000:.2%})\x1b[0m"
+        )
+        state_count_color = (
+            GREEN if state_count <= 1024 else YELLOW if state_count <= 2**16 else RED
+        )
+        print(f"\x1b[1mState count\x1b[0m: {state_count_color}{state_count}\x1b[0m")
+
+        print(f"\x1b[1mTotal steps\x1b[0m: {total_steps:_}")
+        print(f"\x1b[1mAverage steps\x1b[0m: {total_steps / len(output):_.2f}")
+
+        if unused_rules and (not args.no_used or args.skip is not None or args.number is not None):
             print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(rules.splitlines())}")
             dedup = {}
             for state, symbol in unused_rules:
