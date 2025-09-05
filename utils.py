@@ -207,7 +207,7 @@ class Program:
                         line,
                         result,
                         steps,
-                        count_states := logic_mill.state_count(),
+                        logic_mill.state_count(),
                         expected_output,
                     )
                 )
@@ -240,7 +240,7 @@ class Program:
                 GREEN if expected_output and expected_output.strip() == result.strip() else RED
             )
             print(
-                f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() or 'N/A'}\x1b[0m"
+                f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() or 'N/A'}{f' ({n})' if expected_output and (n := count_unary(expected_output.strip())) is not None else ''}\x1b[0m"
             )
             print()
 
