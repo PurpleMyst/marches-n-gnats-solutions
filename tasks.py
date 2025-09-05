@@ -5,20 +5,33 @@ import sys
 import webbrowser
 from glob import glob
 from pathlib import Path
+from typing import Annotated
 
 import pretty_errors as _
 import pyfzf
 import pyhtml2md
 import requests
+import typer
 import unidecode
-from argh import aliases, dispatch_commands
 from bs4 import BeautifulSoup
 
+app = typer.Typer(
+    help="Manage and run coding quests.", context_settings={"help_option_names": ["-h", "--help"]}
+)
 
-@aliases("r")
+
+@app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
 def run(
-    quest: str, pattern: str = "", compress: bool = False, quiet: bool = False, jobs: bool = False
+    ctx: typer.Context,
+    quest: Annotated[str, typer.Argument(..., help="Quest number or name.")],
+    pattern: Annotated[
+        str, typer.Option("--pattern", "-p", help="Pattern to filter Python files.")
+    ] = "",
 ) -> None:
+    """ "Run a quest by its number or name.
+
+    Any extra arguments are passed to the quest script.
+    """
     if quest.isdigit():
         [quest_path] = Path(__file__).parent.glob(f"*{quest}*")
         quest = quest_path.name
@@ -39,16 +52,9 @@ def run(
     print(f"Running quest {quest} with python file {py_file.name}")
 
     input_file = py_file.parent / "input.txt"
+    args = list(ctx.args)
     if input_file.exists():
-        args = ["-i", input_file]  # type: ignore
-    else:
-        args = []
-    if compress:
-        args.append("-c")
-    if quiet:
-        args.append("-q")
-    if jobs:
-        args.append("-j")
+        args.extend(["-i", str(input_file)])
 
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).parent)
@@ -61,12 +67,16 @@ def run(
         print("Execution interrupted by user.")
 
 
+app.command("r", context_settings={"allow_extra_args": True, "ignore_unknown_options": True})(run)
+
+
 def is_solved(quest: str) -> bool:
     return bool(glob("*" + format(int(re.search(r"/quest/(\d+)", quest).group(1)), "02") + "*"))
 
 
-@aliases("ss")
+@app.command()
 def start_solve() -> None:
+    "Start solving a new quest."
     os.chdir(Path(__file__).parent)
     base_url = "https://mng.quest"
     resp = requests.get(base_url)
@@ -127,9 +137,8 @@ def start_solve() -> None:
     webbrowser.open_new(quest_url)
 
 
-def main():
-    dispatch_commands([run, start_solve])
+app.command("ss")(start_solve)
 
 
 if __name__ == "__main__":
-    main()
+    app()

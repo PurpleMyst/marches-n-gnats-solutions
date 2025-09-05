@@ -1,4 +1,4 @@
-from utils import Program, SAME
+from utils import SAME, Program
 
 # On the input tape, you'll get a Roman numeral (1-3999). Your task is to convert it to a unary
 # number. For example, if the input tape is `IX`, your output tape should be `|||||||||`.
@@ -25,7 +25,7 @@ for sym, value in NUMERALS:
     if 2 * value < 1000:
         CAN_ADD[value] = {sym}
     if 3 * value < 1000:
-        CAN_ADD[2*value] = {sym}
+        CAN_ADD[2 * value] = {sym}
 
 
 def main() -> None:
@@ -62,7 +62,15 @@ def main() -> None:
                 "R" if value != 1 else "L",
             )
 
-            p.find(f"SAW_{value}", "_", "|", "R", f"ADD_{value - 1}" if value != 1 else "HALT", "|", "R")
+            p.find(
+                f"SAW_{value}",
+                "_",
+                "|",
+                "R",
+                f"ADD_{value - 1}" if value != 1 else "HALT",
+                "|",
+                "R",
+            )
 
             if value not in CAN_ADD:
                 p.ignore(f"SAW_{value}", NUMERAL_SYMBOLS, "R")

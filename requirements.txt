@@ -3,16 +3,23 @@ beautifulsoup4==4.13.5
 bs4==0.0.2
 certifi==2025.8.3
 charset-normalizer==3.4.3
+click==8.2.1
 colorama==0.4.6
 idna==3.10
-logic-mill-rs @ git+https://github.com/PurpleMyst/logic_mill_rs.git@b4eb4b1bcd105ff7ab784fa7852705a12bbf65fa
+logic-mill-rs @ git+https://github.com/PurpleMyst/logic_mill_rs.git@8dc80047cb1962dbc81d804e166878d7e2f8e02b
+markdown-it-py==4.0.0
+mdurl==0.1.2
 pretty-errors==1.2.25
 pyfzf==0.3.1
+pygments==2.19.2
 pyhtml2md==1.7.0
 pyperclip==1.9.0
 requests==2.32.5
+rich==14.1.0
+shellingham==1.5.4
 soupsieve==2.8
 tqdm==4.67.1
+typer==0.17.3
 typing-extensions==4.15.0
 unidecode==1.4.0
 urllib3==2.5.0

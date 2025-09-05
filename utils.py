@@ -36,6 +36,13 @@ def count_unary(tape: str) -> int | None:
     return tape.count("|") if is_unary(tape) else None
 
 
+def base_and_suffix(n: str) -> tuple[str, int | None]:
+    """Given a state name like FOO_123, return ("FOO", 123). If there is no suffix, return ("FOO", None)."""
+    if m := re.match(r"^(.*)_(\d+)$", n):
+        return m.group(1), int(m.group(2))
+    return n, None
+
+
 class Transition(NamedTuple):
     """Represents a transition in a Turing machine."""
 
@@ -80,9 +87,9 @@ def build_safe_charset(use_full_plane: bool = False) -> str:
     return "".join(chars)
 
 
-def _do_run(item: tuple[str, str | None], parsed_rules, quiet: bool):
+def _do_run(item: tuple[str, str | None], rules: str, quiet: bool):
     line, expected_output = item
-    logic_mill = mill.LogicMill(parsed_rules)
+    logic_mill = mill.LogicMill(rules)
     result, steps = logic_mill.run(line.strip(), verbose=not quiet)
     return line, expected_output, logic_mill, result, steps
 
@@ -97,7 +104,7 @@ def _do_split(line: str):
 
 class Program:
     def __init__(self) -> None:
-        self._transitions = []
+        self._transitions: list[Transition] = []
 
     @staticmethod
     def _encode(n: int) -> str:
@@ -149,9 +156,31 @@ class Program:
             action="store_true",
             help="Use multiple processes to run the Turing machine on multiple inputs.",
         )
+        argparser.add_argument(
+            "-n",
+            "--number",
+            type=int,
+            default=None,
+            help="Limit the number of lines to process from the input.",
+        )
+        argparser.add_argument(
+            "-s", "--skip", type=int, default=None, help="Skip the first N lines from the input."
+        )
+        argparser.add_argument(
+            "-U", "--no-used", action="store_true", help="Do not compute unused rules."
+        )
         args = argparser.parse_args()
 
-        transitions = sorted(set(self._transitions))
+        transitions = sorted(
+            set(self._transitions),
+            key=lambda t: (
+                base_and_suffix(t.from_state),
+                t.symbol,
+                base_and_suffix(t.to_state),
+                t.new_symbol,
+                t.direction,
+            ),
+        )
 
         frequency = Counter()
         for transition in transitions:
@@ -180,7 +209,6 @@ class Program:
         rules = "\n".join(lines)
         with open("rules.txt", "w", encoding="utf-8") as f:
             f.write(rules)
-        parsed_rules = mill.parse_transition_rules(rules)
         pyperclip.copy(rules)
 
         output = []
@@ -190,17 +218,22 @@ class Program:
         with suppress(KeyboardInterrupt), ProcessPoolExecutor() as executor:
             f = sys.stdin if args.input == "-" else open(args.input)
             d = f.read()
-            do_run = partial(_do_run, parsed_rules=parsed_rules, quiet=args.quiet)
-            total = len(d.splitlines())
+            do_run = partial(_do_run, rules=rules, quiet=args.quiet)
+            lines = d.splitlines()
+            if args.skip is not None:
+                lines = lines[args.skip :]
+            if args.number is not None:
+                lines = lines[: args.number]
+            total = len(lines)
             for line, expected_output, logic_mill, result, steps in (
                 tqdm(
-                    (executor.map if args.jobs else map)(do_run, map(_do_split, d.splitlines())),
+                    (executor.map if args.jobs else map)(do_run, map(_do_split, lines)),
                     desc="Processing",
                     unit="line",
                     total=total,
                 )
                 if args.quiet
-                else map(do_run, map(_do_split, d.splitlines()))
+                else map(do_run, map(_do_split, lines))
             ):
                 output.append(
                     (
@@ -226,7 +259,7 @@ class Program:
                 f"\x1b[1mOutput tape\x1b[0m: {result.strip()}{f' ({n})' if (n := count_unary(result.strip())) is not None else ''}"
             )
             print(f"\x1b[1mSteps taken\x1b[0m: {steps:_}")
-            print(f"\x1b[1mRule count\x1b[0m: {len(parsed_rules)}")
+            print(f"\x1b[1mRule count\x1b[0m: {len(rules.splitlines())}")
 
             rule_size_color = GREEN if len(rules) <= 170_000 else RED
             print(
@@ -244,8 +277,8 @@ class Program:
             )
             print()
 
-        if unused_rules is not None:
-            print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(parsed_rules)}")
+        if unused_rules and not args.no_used:
+            print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(rules.splitlines())}")
             dedup = {}
             for state, symbol in unused_rules:
                 if m := re.match(r"(\w+)_(\d+)$", state):
