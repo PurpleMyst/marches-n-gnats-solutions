@@ -128,7 +128,10 @@ class Program:
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *_) -> None:
+    def __exit__(self, exc_type, *_) -> None:
+        if exc_type is not None:
+            return
+
         argparser = argparse.ArgumentParser(
             description="Run a Turing machine with the given transition rules.",
             add_help=False,
