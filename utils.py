@@ -271,7 +271,11 @@ class Program:
         for line, result, steps, state_count, expected_output in output:
             total_steps += steps
 
-            if args.failing and expected_output and expected_output.strip() == result.strip():
+            if (
+                args.failing
+                and expected_output is not None
+                and expected_output.strip() == result.strip()
+            ):
                 continue
             had_failing = True
 
@@ -283,10 +287,12 @@ class Program:
             )
             print(f"\x1b[1mSteps taken\x1b[0m: {steps:_}")
             expected_output_color = (
-                GREEN if expected_output and expected_output.strip() == result.strip() else RED
+                GREEN
+                if expected_output is not None and expected_output.strip() == result.strip()
+                else RED
             )
             print(
-                f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() if expected_output is not None else 'N/A'}{f' ({n})' if expected_output and (n := count_unary(expected_output.strip())) is not None else ''}\x1b[0m"
+                f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() if expected_output is not None else 'N/A'}{f' ({n})' if expected_output is not None and (n := count_unary(expected_output.strip())) is not None else ''}\x1b[0m"
             )
             print()
 
