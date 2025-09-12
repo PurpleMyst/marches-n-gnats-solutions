@@ -108,12 +108,16 @@ def start_solve() -> None:
     quest_resp.raise_for_status()
     quest_soup = BeautifulSoup(quest_resp.text, "html.parser")
     task = quest_soup.find(id="task")
-    task_lines = pyhtml2md.convert(str(task)).splitlines()
-    task_lines = [
-        "# " + unidecode.unidecode(line.strip(), errors="preserve")
-        for line in task_lines
-        if line.strip()
-    ]
+    try:
+        task_lines = pyhtml2md.convert(str(task)).splitlines()
+        task_lines = [
+            "# " + unidecode.unidecode(line.strip(), errors="preserve")
+            for line in task_lines
+            if line.strip()
+        ]
+    except Exception as e:
+        print(f"Failed to convert HTML to Markdown: {e}")
+        task_lines = ["# Task description could not be converted."]
 
     (quest_dir / "base_solution.py").write_text(
         "\n".join(

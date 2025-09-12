@@ -286,7 +286,7 @@ class Program:
                 GREEN if expected_output and expected_output.strip() == result.strip() else RED
             )
             print(
-                f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() or 'N/A'}{f' ({n})' if expected_output and (n := count_unary(expected_output.strip())) is not None else ''}\x1b[0m"
+                f"\x1b[1mExpected output\x1b[0m: {expected_output_color}{expected_output.strip() if expected_output is not None else 'N/A'}{f' ({n})' if expected_output and (n := count_unary(expected_output.strip())) is not None else ''}\x1b[0m"
             )
             print()
 
@@ -318,7 +318,7 @@ class Program:
                     dedup.setdefault((state, symbol), set()).add(None)
             for state, rules in sorted(dedup.items()):
                 print(
-                    f"  {state[0]} {state[1]}  " + str(sorted(rules) if None not in rules else "*")
+                    f"  {state[0]} {state[1]}  " + str(sorted(rules) if None not in rules else "✨")
                 )
 
     def __call__(
