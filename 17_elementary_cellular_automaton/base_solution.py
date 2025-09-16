@@ -17,7 +17,8 @@ def main() -> None:
     with Program() as p:
         # At the start, mark number of generations left (after the initial one), then move on to
         # evolving.
-        p("INIT", {ALIVE, DEAD}, "MARK", SAME, "L")
+        p("INIT", ALIVE, "MARK", SAME, "L")
+        p("INIT", DEAD, "HALT", "_", "L")
         p("MARK", "_", "EVOLVE_PAST_DEAD", "5", "R")
 
         # EVOLVE_PAST_DEAD: means we are moving right and came from a dead cell.
@@ -52,7 +53,6 @@ def main() -> None:
         p("EVOLVE_PAST_ALIVE_SAW_ALIVE", {ALIVE, DEAD}, "EVOLVE_PAST_KILLED", DEAD, "R")
         p("EVOLVE_PAST_KILLED", DEAD, "EVOLVE_PAST_ALIVE", SAME, "R")
 
-        p("EVOLVE_PAST_DEAD", "_", "RETURN", SAME, "L")
         p("EVOLVE_PAST_ALIVE", "_", "RETURN", "+", "L")
 
         # RETURN: means we're moving back to the start
@@ -62,21 +62,10 @@ def main() -> None:
             next_n = str(int(n) - 1)
             live_n = str((int(n) + 5) % 10)
 
-            p(
-                "RETURN",
-                n,
-                f"EVOLVE_PAST_DEAD" if not is_last else "STRIP",
-                next_n if not is_last else "_",
-                "R",
-            )
-            p("RETURN", live_n, f"RESTART_{n}" if not is_last else "START_STRIP", "+", "L")
+            p("RETURN", live_n, f"RESTART_{n}" if not is_last else "HALT", "+", "L")
 
             if not is_last:
                 p(f"RESTART_{n}", "_", "EVOLVE_PAST_DEAD", next_n, "R")
-
-        p("START_STRIP", "_", "STRIP", SAME, "R")
-        p("STRIP", DEAD, "STRIP", "_", "R")
-        p("STRIP", {ALIVE, "_"}, "HALT", SAME, "R")
 
 
 if __name__ == "__main__":
