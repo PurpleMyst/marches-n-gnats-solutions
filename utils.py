@@ -221,9 +221,27 @@ class Program:
         rules_path = (
             Path("rules.txt") if args.input == "-" else Path(args.input).parent / "rules.txt"
         )
+        dot_path = (
+            Path("rules.dot") if args.input == "-" else Path(args.input).parent / "rules.dot"
+        )
         with open(rules_path, "w", encoding="utf-8") as f:
             f.write(rules)
         pyperclip.copy(rules)
+        with open(dot_path, "w", encoding="utf-8") as f:
+            f.write("digraph G {\n")
+            f.write('  rankdir="LR";\n')
+            f.write('  node [shape=circle, fontname="monospace"];\n')
+            f.write('  "INIT" [shape=doublecircle, style=filled, fillcolor=lightgrey, rank=min];\n')
+            for transition in transitions:
+                from_state = transition.from_state
+                to_state = transition.to_state
+                symbol = transition.symbol
+                new_symbol = transition.new_symbol
+                direction = transition.direction
+                f.write(f'  "{from_state}" -> "{to_state}" [label="{symbol}→{new_symbol},{direction}"];\n')
+            f.write('  "HALT" [shape=doublecircle, style=filled, fillcolor=lightgrey, rank=max];\n')
+            f.write("}\n")
+
 
         output = []
 
