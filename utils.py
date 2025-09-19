@@ -332,7 +332,7 @@ class Program:
         print(f"\x1b[1mTotal steps\x1b[0m: {total_steps:_}")
         print(f"\x1b[1mAverage steps\x1b[0m: {total_steps / len(output):_.2f}")
 
-        if unused_rules and (not args.no_used or args.skip is not None or args.number is not None):
+        if unused_rules and not args.no_used and args.skip is None and args.number is None:
             print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(rules.splitlines())}")
             dedup = {}
             for state, symbol in unused_rules:
@@ -349,7 +349,7 @@ class Program:
         self,
         from_state: str,
         symbol: str | set[str],
-        to_state: str,
+        to_state: str | _Same,
         new_symbol: str | _Same,
         dir: Literal["L", "R"],
     ) -> None:
@@ -361,7 +361,7 @@ class Program:
                 transition = Transition(
                     from_state=from_state,
                     symbol=sym,
-                    to_state=to_state,
+                    to_state=from_state if isinstance(to_state, _Same) else to_state,
                     new_symbol=sym if isinstance(new_symbol, _Same) else new_symbol,
                     direction=dir,
                 )
@@ -370,7 +370,7 @@ class Program:
             transition = Transition(
                 from_state=from_state,
                 symbol=symbol,
-                to_state=to_state,
+                to_state=from_state if isinstance(to_state, _Same) else to_state,
                 new_symbol=symbol if isinstance(new_symbol, _Same) else new_symbol,
                 direction=dir,
             )
