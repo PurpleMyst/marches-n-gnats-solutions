@@ -248,7 +248,7 @@ class Program:
         unused_rules: set[tuple[str, str]] | None = None
 
         with suppress(KeyboardInterrupt), ProcessPoolExecutor() as executor:
-            f = sys.stdin if args.input == "-" else open(args.input)
+            f = sys.stdin if args.input == "-" else open(args.input, encoding="utf-8")
             d = f.read()
             do_run = partial(_do_run, rules=rules, quiet=args.quiet)
             lines = d.splitlines()
