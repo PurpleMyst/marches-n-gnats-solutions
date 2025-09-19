@@ -21,7 +21,7 @@ def main() -> None:
         p("UNMARK_RHS", DIV, "UNMARK_LHS", "|", "L")
         p("UNMARK_LHS", MARK_LHS, SAME, "|", "L")
         p("UNMARK_LHS", "|", "ADD_DIV", SAME, "R")
-        p("UNMARK_LHS", ",", "EARLY_FINISH", SAME, "R")
+        p("UNMARK_LHS", ",", "EARLY_FINISH", "|", "R")
         p("ADD_DIV", "|", "FIND_COMMA", DIV, "L")
         p.find("FIND_COMMA", ",", "|", "L", "INC_QUOT", SAME, "L")
         p.find("INC_QUOT", "_", "|", "L", "FIND_DIV", "|", "R")
@@ -29,10 +29,7 @@ def main() -> None:
         p("CLEAN", MARK_LHS, SAME, "|", "R")
         p("CLEAN", {DIV, MARK_RHS, "|"}, SAME, "_", "R")
         p("CLEAN", "_", "HALT", "_", "L")
-        p("EARLY_FINISH", "|", "EARLY_FINISH", "_", "R")
-        p("EARLY_FINISH", "_", "LAST_INC_QUOT", "_", "L")
-        p.find("LAST_INC_QUOT", ",", "_", "L", "READD_COMMA", "|", "R")
-        p("READD_COMMA", "_", "HALT", ",", "R")
+        p("EARLY_FINISH", "|", "CLEAN", ",", "R")
 
 
 if __name__ == "__main__":
