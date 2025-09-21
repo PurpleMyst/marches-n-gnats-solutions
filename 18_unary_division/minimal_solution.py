@@ -15,12 +15,12 @@ def main() -> None:
         p("FIND_EOT", LAST_LHS, SAME, MARK_LHS, "R")
 
         p("NEXT_RHS", "|", "NEXT_DIV_LHS", "_", "L")
-        p("NEXT_RHS", DIV, "UNMARK_LHS", "|", "L")
+        p("NEXT_RHS", DIV, "INC_QUOT", "|", "L")
         p.find("NEXT_LHS", "|", {MARK_LHS, LAST_LHS}, "L", "FIND_EOT", LAST_LHS, "R")
         p.find("NEXT_DIV_LHS",DIV, "|", "L", "NEXT_LHS", SAME, "L")
 
-        p("UNMARK_LHS", MARK_LHS, SAME, "|", "L")
-        p("UNMARK_LHS", LAST_LHS, "INC_QUOT", DIV, "L")
+        p("INC_QUOT", MARK_LHS, SAME, "|", "L")
+        p("INC_QUOT", LAST_LHS, "INC_QUOT", DIV, "L")
         p.find("INC_QUOT", "_", {"|", ","}, "L", "FIND_EOT", "|", "R")
         p("NEXT_LHS", ",", "CLEAN", ",", "R")
         p("CLEAN", {MARK_LHS, LAST_LHS}, SAME, "|", "R")
