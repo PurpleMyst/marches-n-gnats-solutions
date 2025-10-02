@@ -64,7 +64,7 @@ def run(
             env=env,
         )
     except KeyboardInterrupt:
-        print("Execution interrupted by user.")
+        print("\x1b[31mExecution interrupted by user.\x1b[0m")
 
 
 app.command("r", context_settings={"allow_extra_args": True, "ignore_unknown_options": True})(run)

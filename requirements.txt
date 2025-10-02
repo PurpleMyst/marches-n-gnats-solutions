@@ -6,7 +6,7 @@ charset-normalizer==3.4.3
 click==8.2.1
 colorama==0.4.6
 idna==3.10
-logic-mill-rs @ git+https://github.com/PurpleMyst/logic_mill_rs.git@8dc80047cb1962dbc81d804e166878d7e2f8e02b
+logic-mill-rs @ git+https://github.com/PurpleMyst/logic_mill_rs.git@4e35adf67996311ed67e0c89498d92db08075260
 markdown-it-py==4.0.0
 mdurl==0.1.2
 pretty-errors==1.2.25

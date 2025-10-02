@@ -1,6 +1,7 @@
 import argparse
 import re
 import sys
+import os
 import unicodedata
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import suppress
@@ -18,6 +19,18 @@ LETTERS = set(ascii_lowercase) | set("äöõü") | set("-")
 GREEN = "\x1b[32m"
 RED = "\x1b[5;31m"
 YELLOW = "\x1b[5;33m"
+
+def get_caller_info():
+    n = 1
+    while True:
+        frame = sys._getframe(n)
+        filename = os.path.abspath(frame.f_code.co_filename)
+        if filename == os.path.abspath(__file__):
+            n += 1
+            continue
+        lineno = frame.f_lineno
+        return os.path.basename(filename), lineno
+
 
 
 class _Same:
@@ -37,11 +50,11 @@ def count_unary(tape: str) -> int | None:
     return tape.count("|") if is_unary(tape) else None
 
 
-def base_and_suffix(n: str) -> tuple[str, int | None]:
-    """Given a state name like FOO_123, return ("FOO", 123). If there is no suffix, return ("FOO", None)."""
+def base_and_suffix(n: str) -> tuple[str, int]:
+    """Given a state name like FOO_123, return ("FOO", 123). If there is no suffix, return ("FOO", 0)."""
     if m := re.match(r"^(.*)_(\d+)$", n):
         return m.group(1), int(m.group(2))
-    return n, None
+    return n, 0
 
 
 class Transition(NamedTuple):
@@ -106,6 +119,7 @@ def _do_split(line: str):
 class Program:
     def __init__(self) -> None:
         self._transitions: list[Transition] = []
+        self._locations: dict[Transition, tuple[str, int]] = {}
 
     @staticmethod
     def _encode(n: int) -> str:
@@ -215,7 +229,10 @@ class Program:
             symbol = transition.symbol
             new_symbol = transition.new_symbol
             direction = transition.direction
-            lines.append(f"{from_state} {symbol} {to_state} {new_symbol} {direction}")
+            comment = ""
+            if loc := self._locations.get(transition):
+                comment = f"  // {loc[0]}:{loc[1]}"
+            lines.append(f"{from_state} {symbol} {to_state} {new_symbol} {direction}{comment}")
 
         rules = "\n".join(lines)
         rules_path = (
@@ -340,7 +357,9 @@ class Program:
         print(f"\x1b[1mState count\x1b[0m: {state_count_color}{state_count}\x1b[0m")
 
         print(f"\x1b[1mTotal steps\x1b[0m: {total_steps:_}")
-        print(f"\x1b[1mAverage steps\x1b[0m: {total_steps / len(output):_.2f}")
+
+        if output:
+            print(f"\x1b[1mAverage steps\x1b[0m: {total_steps / len(output):_.2f}")
 
         if unused_rules and not args.no_used and args.skip is None and args.number is None:
             print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(rules.splitlines())}")
@@ -357,7 +376,7 @@ class Program:
 
     def __call__(
         self,
-        from_state: str,
+        from_state: str | set[str],
         symbol: str | set[str],
         to_state: str | _Same,
         new_symbol: str | _Same,
@@ -366,37 +385,39 @@ class Program:
         """Writes a rule to the file in the format:
         from_state current_symbol to_state new_symbol direction
         """
+        if isinstance(from_state, set):
+            for state in from_state:
+                self(state, symbol, to_state, new_symbol, dir)
+            return
+
         if isinstance(symbol, set):
             for sym in symbol:
-                transition = Transition(
+                self(
                     from_state=from_state,
                     symbol=sym,
                     to_state=from_state if isinstance(to_state, _Same) else to_state,
                     new_symbol=sym if isinstance(new_symbol, _Same) else new_symbol,
-                    direction=dir,
+                    dir=dir,
                 )
-                self._transitions.append(transition)
-        else:
-            transition = Transition(
-                from_state=from_state,
-                symbol=symbol,
-                to_state=from_state if isinstance(to_state, _Same) else to_state,
-                new_symbol=symbol if isinstance(new_symbol, _Same) else new_symbol,
-                direction=dir,
-            )
-            self._transitions.append(transition)
+            return
 
-    def ignore(self, state: str, symbol: str | set[str], dir: Literal["L", "R"]) -> None:
+        transition = Transition(
+            from_state=from_state,
+            symbol=symbol,
+            to_state=from_state if isinstance(to_state, _Same) else to_state,
+            new_symbol=symbol if isinstance(new_symbol, _Same) else new_symbol,
+            direction=dir,
+        )
+        self._transitions.append(transition)
+        self._locations[transition] = get_caller_info()
+
+    def ignore(self, state: str | set[str], symbol: str | set[str], dir: Literal["L", "R"]) -> None:
         """Writes a rule that ignores the current symbol and stays in the same state."""
-        if isinstance(symbol, set):
-            for symbol in symbol:
-                self(state, symbol, state, symbol, dir)
-        else:
-            self(state, symbol, state, symbol, dir)
+        self(state, symbol, SAME, SAME, dir)
 
     def find(
         self,
-        from_state: str,
+        from_state: str | set[str],
         needle: str | set[str],
         ignoring: str | set[str],
         search_dir: Literal["L", "R"],
