@@ -1,7 +1,7 @@
 import argparse
+import os
 import re
 import sys
-import os
 import unicodedata
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import suppress
@@ -20,6 +20,7 @@ GREEN = "\x1b[32m"
 RED = "\x1b[5;31m"
 YELLOW = "\x1b[5;33m"
 
+
 def get_caller_info():
     n = 1
     while True:
@@ -30,7 +31,6 @@ def get_caller_info():
             continue
         lineno = frame.f_lineno
         return os.path.basename(filename), lineno
-
 
 
 class _Same:
@@ -361,18 +361,22 @@ class Program:
         if output:
             print(f"\x1b[1mAverage steps\x1b[0m: {total_steps / len(output):_.2f}")
 
-        if unused_rules and not args.no_used and args.skip is None and args.number is None:
-            print(f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(rules.splitlines())}")
-            dedup = {}
-            for state, symbol in unused_rules:
-                if m := re.match(r"(\w+)_(\d+)$", state):
-                    dedup.setdefault((m.group(1), symbol), set()).add(int(m.group(2)))
-                else:
-                    dedup.setdefault((state, symbol), set()).add(None)
-            for state, rules in sorted(dedup.items()):
+        if not args.no_used and args.skip is None and args.number is None:
+            if unused_rules is not None:
                 print(
-                    f"  {state[0]} {state[1]}  " + str(sorted(rules) if None not in rules else "✨")
+                    f"\n\x1b[1mUnused rules\x1b[0m: {len(unused_rules)}/{len(rules.splitlines())}"
                 )
+                dedup = {}
+                for state, symbol in unused_rules:
+                    if m := re.match(r"(\w+)_(\d+)$", state):
+                        dedup.setdefault((m.group(1), symbol), set()).add(int(m.group(2)))
+                    else:
+                        dedup.setdefault((state, symbol), set()).add(None)
+                for state, rules in sorted(dedup.items()):
+                    print(
+                        f"  {state[0]} {state[1]}  "
+                        + str(sorted(rules) if None not in rules else "✨")
+                    )
 
     def __call__(
         self,

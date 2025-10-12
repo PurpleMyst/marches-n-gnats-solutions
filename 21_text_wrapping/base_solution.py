@@ -25,35 +25,39 @@ UP_LETTERS = {l.upper() for l in LETTERS}
 # - If the input tape is `|||||||:hey-you`, your output tape should be `hey-you` (whole text fits into
 # 1 line of 7 characters).
 
+
 def main() -> None:
     with Program() as p:
-        p.ignore("INIT", {"|", "/", ":", *UP_LETTERS, "=", "+"}, "R")
+        p("INIT", "|", "PROC", "_", "R")
+
+        p("PROC", ":", SAME, "|", "R")
+        p.ignore("PROC", {"|", "/", *UP_LETTERS, "=", "+"}, "R")
 
         for l in LETTERS:
-            p("INIT", l, "MARK", l.upper(), "L")
-        p("INIT", "-", "MARK", "=", "L")
-        p("INIT", "_", "CLEAN", "_", "L")
+            p("PROC", l, "MARK", l.upper(), "L")
+        p("PROC", "-", "MARK", "=", "L")
+        p("PROC", "_", "CLEAN", "_", "L")
 
-        p.find("MARK", "|", {*LETTERS, *UP_LETTERS, ":", "/", "=", "+"}, "L", "INIT", "/", "R")
+        p.find("MARK", "|", {*UP_LETTERS, "/", "=", "+"}, "L", "PROC", "/", "R")
         p("MARK", "_", "NL", "_", "R")
 
         p("NL", "/", SAME, "|", "R")
         for l in LETTERS:
             p("NL", l, SAME, l.upper(), "R")
-        p.ignore("NL", {*UP_LETTERS, "=", ":", "+"}, "R")
+        p.ignore("NL", {*UP_LETTERS, "=", "+"}, "R")
         p("NL", {"-", "_"}, "READY", SAME, "L")
         for l in LETTERS:
             p("READY", l.upper(), SAME, l, "L")
-        p("READY", "=", "INIT", "+", "R")
+        p("READY", "=", "PROC", "+", "R")
 
         for l in LETTERS:
             p("CLEAN", l.upper(), SAME, l, "L")
         p("CLEAN", "/", SAME, "_", "L")
         p("CLEAN", "|", SAME, "_", "L")
-        p("CLEAN", ":", SAME, "_", "L")
         p("CLEAN", "=", SAME, "-", "L")
         p("CLEAN", "+", SAME, "+", "L")
         p("CLEAN", "_", "HALT", "_", "R")
+
 
 if __name__ == "__main__":
     main()
