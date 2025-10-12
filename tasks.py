@@ -107,7 +107,7 @@ def start_solve() -> None:
     quest_resp = requests.get(quest_url)
     quest_resp.raise_for_status()
     quest_soup = BeautifulSoup(quest_resp.text, "html.parser")
-    task = quest_soup.find(id="task")
+    task = quest_soup.main.find_all("div")[1]
     try:
         task_lines = pyhtml2md.convert(str(task)).splitlines()
         task_lines = [
