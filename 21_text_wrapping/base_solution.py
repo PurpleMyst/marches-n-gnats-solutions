@@ -42,10 +42,8 @@ def main() -> None:
         p("MARK", "_", "NL", "_", "R")
 
         p("NL", "/", SAME, "|", "R")
-        for l in LETTERS:
-            p("NL", l, SAME, l.upper(), "R")
         p.ignore("NL", {*UP_LETTERS, "=", "+"}, "R")
-        p("NL", {"-", "_"}, "READY", SAME, "L")
+        p("NL", {*LETTERS, "-", "_"}, "READY", SAME, "L")
         for l in LETTERS:
             p("READY", l.upper(), SAME, l, "L")
         p("READY", "=", "PROC", "+", "R")
